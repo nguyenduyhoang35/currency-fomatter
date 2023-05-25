@@ -498,7 +498,7 @@ class CurrencyFormat extends Component<MyProps, MyState> {
 
 		numStr =
 			beforeDecimal +
-			((hasDecimalSeparator && (afterDecimal === "" ? "" : decimalSeparator)) || "") +
+			((hasDecimalSeparator && (afterDecimal === "0" ? "" : decimalSeparator)) || "") +
 			(suffix ? afterDecimal + suffix : afterDecimal);
 
 		return numStr;

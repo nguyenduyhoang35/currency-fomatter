@@ -44,7 +44,7 @@ export function limitToScale(numStr: string, scale: number, fixedDecimalScale: b
     const val: string = parseFloat("0" + '.' + str).toString()
     const parts = val.split('.');
     const afterDecimal = parts[1] || '';
-    return afterDecimal === "0" ? '' : afterDecimal;
+    return afterDecimal === "0" ? '0' : afterDecimal;
   }
   return str
 }
