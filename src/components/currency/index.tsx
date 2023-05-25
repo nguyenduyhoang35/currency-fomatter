@@ -77,24 +77,24 @@ class CurrencyFormat extends Component<MyProps, MyState> {
 		numAsString?: any;
 	};
 	static defaultProps: Partial<MyProps> = {
-		displayType: "input",
-		decimalSeparator: ".",
-		thousandSpacing: "3",
-		thousandSeparator: ",",
-		fixedDecimalScale: false,
-		prefix: "",
-		suffix: "",
-		allowNegative: true,
-		isNumericString: false,
-		type: "text",
-		onValueChange: noop,
-		onChange: noop,
-		onKeyDown: noop,
-		onMouseUp: noop,
-		onFocus: noop,
-		onBlur: noop,
-		isAllowed: returnTrue,
-	};
+    displayType: "input",
+    decimalSeparator: ".",
+    thousandSpacing: "3",
+    thousandSeparator: ",",
+    fixedDecimalScale: false,
+    prefix: "",
+    suffix: "",
+    allowNegative: true,
+    isNumericString: false,
+    type: "text",
+    onValueChange: noop,
+    onChange: noop,
+    onKeyDown: noop,
+    onMouseUp: noop,
+    onFocus: noop,
+    onBlur: noop,
+    isAllowed: returnTrue,
+  };
 
 	constructor(props: MyProps) {
 		super(props);
@@ -490,16 +490,12 @@ class CurrencyFormat extends Component<MyProps, MyState> {
 
 		//add prefix and suffix
 		if (prefix) beforeDecimal = prefix + beforeDecimal;
+		if (suffix) afterDecimal = afterDecimal + suffix;
 
 		//restore negation sign
 		if (addNegation) beforeDecimal = "-" + beforeDecimal;
 
-    console.log(beforeDecimal, afterDecimal, decimalSeparator);
-
-		numStr =
-			beforeDecimal +
-			((hasDecimalSeparator && (afterDecimal === "0" ? "" : decimalSeparator)) || "") +
-			(suffix ? afterDecimal + suffix : afterDecimal);
+		numStr = beforeDecimal + ((hasDecimalSeparator && decimalSeparator) || "") + afterDecimal;
 
 		return numStr;
 	}

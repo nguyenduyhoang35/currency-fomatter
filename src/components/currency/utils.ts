@@ -40,12 +40,6 @@ export function limitToScale(numStr: string, scale: number, fixedDecimalScale: b
   for (let i = 0; i <= scale - 1; i++) {
     str += numStr[i] || filler;
   }
-  if (fixedDecimalScale) {
-    const val: string = parseFloat("0" + '.' + str).toString()
-    const parts = val.split('.');
-    const afterDecimal = parts[1] || '';
-    return afterDecimal === "0" ? '0' : afterDecimal;
-  }
   return str
 }
 
