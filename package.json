@@ -1,20 +1,39 @@
 {
   "name": "currency-fomatter",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "",
-  "main": "index.js",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "yarn build:esm && yarn build:cjs",
+    "build:esm": "tsc",
+    "build:cjs": "tsc --module commonjs --outDir dist/cjs",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint \"{**/*,*}.{js,ts,jsx,tsx}\""
+    "lint": "eslint \"{**/*,*}.{js,ts,jsx,tsx}\"",
+    "prettier": "prettier --write \"{src,tests,example/src}/**/*.{js,ts,jsx,tsx}\""
+  },
+  "peerDependencies": {
+    "react": ">=16"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nguyenduyhoang35/currency-fomatter.git"
   },
-  "keywords": [],
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  
+  "keywords": [
+    "format",
+    "input-number",
+    "currency",
+    "currency-fomatter"
+  ],
   "author": "HoangNguyen",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/nguyenduyhoang35/currency-fomatter/issues"
   },
