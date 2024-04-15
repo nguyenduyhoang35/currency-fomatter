@@ -494,9 +494,11 @@ class CurrencyFormat extends Component<MyProps, MyState> {
 		//restore negation sign
 		if (addNegation) beforeDecimal = "-" + beforeDecimal;
 
+    console.log(beforeDecimal, afterDecimal, decimalSeparator);
+
 		numStr =
 			beforeDecimal +
-			((hasDecimalSeparator && (afterDecimal === "0" ? "" : decimalSeparator)) || "") +
+			((hasDecimalSeparator && (afterDecimal === "" ? "" : decimalSeparator)) || "") +
 			(suffix ? afterDecimal + suffix : afterDecimal);
 
 		return numStr;
