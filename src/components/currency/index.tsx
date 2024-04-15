@@ -851,4 +851,4 @@ class CurrencyFormat extends Component<MyProps, MyState> {
 
 CurrencyFormat.defaultProps = defaultProps;
 
-module.exports = CurrencyFormat;
+export default CurrencyFormat;
