@@ -13,6 +13,7 @@ export function Demo() {
 
 # prop
 
+```js 
 type Props = {
 	value?: any;
 	format: any;
@@ -39,5 +40,7 @@ type Props = {
 	customInput: any;
 	renderText: any;
 };
+
+```
 
 
