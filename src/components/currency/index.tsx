@@ -68,14 +68,18 @@ type MyProps = {
 	displayType: "input" | "text";
 	customInput: any;
 	renderText: any;
+	className?: string
 };
+
 type MyState = { value?: string; numAsString?: any };
 
 class CurrencyFormat extends Component<MyProps, MyState> {
+	
 	state: {
 		value?: string;
 		numAsString?: any;
 	};
+
 	static defaultProps: Partial<MyProps> = {
     displayType: "input",
     decimalSeparator: ".",
@@ -116,11 +120,11 @@ class CurrencyFormat extends Component<MyProps, MyState> {
 		this.onBlur = this.onBlur.bind(this);
 	}
 
-	componentDidUpdate(prevProps: Object) {
+	componentDidUpdate(prevProps: any) {
 		this.updateValueIfRequired(prevProps);
 	}
 
-	updateValueIfRequired(prevProps: Object) {
+	updateValueIfRequired(prevProps: any) {
 		const { props, state } = this;
 
 		if (prevProps !== props) {
@@ -213,7 +217,7 @@ class CurrencyFormat extends Component<MyProps, MyState> {
 
 		if (decimalSeparator === thousandSeparator) {
 			throw new Error(`
-          Decimal separator can\'t be same as thousand separator.\n
+          Decimal separator can't be same as thousand separator.\n
           thousandSeparator: ${thousandSeparator} (thousandSeparator = {true} is same as thousandSeparator = ",")
           decimalSeparator: ${decimalSeparator} (default value for decimalSeparator is .)
        `);
@@ -839,7 +843,7 @@ class CurrencyFormat extends Component<MyProps, MyState> {
 		});
 
 		if (displayType === "text") {
-			return renderText ? renderText(value) || null : <span {...otherProps}>{value}</span>;
+			return renderText ? value || null : <span {...otherProps}>{value}</span>;
 		} else if (customInput) {
 			const CustomInput = customInput;
 			return <CustomInput {...inputProps} />;
