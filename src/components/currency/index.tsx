@@ -95,7 +95,25 @@ class CurrencyFormat extends Component<MyProps, MyState> {
 		value?: string;
 		numAsString?: any;
 	};
-	static defaultProps: Object;
+	static defaultProps = {
+    displayType: "input",
+    decimalSeparator: ".",
+    thousandSpacing: "3",
+    fixedDecimalScale: false,
+    prefix: "",
+    suffix: "",
+    allowNegative: true,
+    isNumericString: false,
+    type: "text",
+    onValueChange: noop,
+    onChange: noop,
+    onKeyDown: noop,
+    onMouseUp: noop,
+    onFocus: noop,
+    onBlur: noop,
+    isAllowed: returnTrue,
+  };
+
 	constructor(props: MyProps) {
 		super(props);
 
@@ -182,7 +200,7 @@ class CurrencyFormat extends Component<MyProps, MyState> {
 	}
 
 	getSeparators() {
-		const { decimalSeparator, thousandSpacing } = this.props;
+		const { decimalSeparator, thousandSpacing = "3" } = this.props;
 		let { thousandSeparator } = this.props;
 
 		if (thousandSeparator === true) {
@@ -452,7 +470,7 @@ class CurrencyFormat extends Component<MyProps, MyState> {
 	 * @param {*} thousandSeparator
 	 * @param {*} thousandSpacing
 	 */
-	formatThousand(beforeDecimal: any, thousandSeparator: string | boolean, thousandSpacing: "2" | "2s" | "3" | "4") {
+	formatThousand(beforeDecimal: any, thousandSeparator: string | boolean, thousandSpacing = "3") {
 		let digitalGroup;
 		switch (thousandSpacing) {
 			case thousandGroupSpacing.two:
@@ -476,7 +494,7 @@ class CurrencyFormat extends Component<MyProps, MyState> {
 	 */
 	formatAsNumber(numStr: string) {
 		const { decimalScale, fixedDecimalScale, prefix, suffix } = this.props;
-		const { thousandSeparator, decimalSeparator, thousandSpacing } = this.getSeparators();
+		const { thousandSeparator, decimalSeparator, thousandSpacing = "3" } = this.getSeparators();
 
 		const hasDecimalSeparator = numStr.indexOf(".") !== -1 || (decimalScale && fixedDecimalScale);
 		let { beforeDecimal, afterDecimal, addNegation } = this.splitDecimal(numStr); // eslint-disable-line prefer-const
