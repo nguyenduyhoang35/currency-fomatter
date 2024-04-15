@@ -41,7 +41,10 @@ export function limitToScale(numStr: string, scale: number, fixedDecimalScale: b
     str += numStr[i] || filler;
   }
   if (fixedDecimalScale) {
-    return Number(str).toString();
+    const val: string = parseFloat("0" + '.' + str).toString()
+    const parts = val.split('.');
+    const afterDecimal = parts[1] || '';
+    return afterDecimal === "0" ? '' : afterDecimal;
   }
   return str
 }
