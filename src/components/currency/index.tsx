@@ -41,6 +41,8 @@ const propTypes = {
 	type: PropTypes.oneOf(["text", "tel"]),
 	isAllowed: PropTypes.func,
 	renderText: PropTypes.func,
+	className: PropTypes.string,
+	placeholder: PropTypes.string
 };
 
 type MyProps = {
@@ -68,7 +70,8 @@ type MyProps = {
 	displayType: "input" | "text";
 	customInput: any;
 	renderText: any;
-	className?: string
+	className: string;
+	placeholder: string
 };
 
 type MyState = { value?: string; numAsString?: any };
@@ -98,6 +101,8 @@ class CurrencyFormat extends Component<MyProps, MyState> {
     onFocus: noop,
     onBlur: noop,
     isAllowed: returnTrue,
+		className: "",
+		placeholder: ""
   };
 
 	constructor(props: MyProps) {
@@ -827,19 +832,21 @@ class CurrencyFormat extends Component<MyProps, MyState> {
 	}
 
 	render() {
-		const { type, displayType, customInput, renderText } = this.props;
+		const { type, displayType, customInput, renderText, placeholder, className } = this.props;
 		const { value } = this.state;
 
 		const otherProps = omit(this.props, propTypes);
 
 		const inputProps = Object.assign({}, otherProps, {
 			type,
-			value,
+			value : (value as string).replace(/^\./, ""),
 			onChange: this.onChange,
 			onKeyDown: this.onKeyDown,
 			onMouseUp: this.onMouseUp,
 			onFocus: this.onFocus,
 			onBlur: this.onBlur,
+			placeholder: placeholder,
+			className: className
 		});
 
 		if (displayType === "text") {
