@@ -40,7 +40,10 @@ export function limitToScale(numStr: string, scale: number, fixedDecimalScale: b
   for (let i = 0; i <= scale - 1; i++) {
     str += numStr[i] || filler;
   }
-  return str;
+  if (fixedDecimalScale) {
+    return Number(str).toString();
+  }
+  return str
 }
 
 /**

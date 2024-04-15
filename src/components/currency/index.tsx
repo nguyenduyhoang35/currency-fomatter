@@ -43,25 +43,6 @@ const propTypes = {
 	renderText: PropTypes.func,
 };
 
-const defaultProps = {
-	displayType: "input",
-	decimalSeparator: ".",
-	thousandSpacing: "3",
-	fixedDecimalScale: false,
-	prefix: "",
-	suffix: "",
-	allowNegative: true,
-	isNumericString: false,
-	type: "text",
-	onValueChange: noop,
-	onChange: noop,
-	onKeyDown: noop,
-	onMouseUp: noop,
-	onFocus: noop,
-	onBlur: noop,
-	isAllowed: returnTrue,
-};
-
 type MyProps = {
 	value?: any;
 	format: any;
@@ -95,10 +76,11 @@ class CurrencyFormat extends Component<MyProps, MyState> {
 		value?: string;
 		numAsString?: any;
 	};
-	static defaultProps = {
+	static defaultProps: Partial<MyProps> = {
     displayType: "input",
     decimalSeparator: ".",
     thousandSpacing: "3",
+    thousandSeparator: ",",
     fixedDecimalScale: false,
     prefix: "",
     suffix: "",
@@ -452,7 +434,7 @@ class CurrencyFormat extends Component<MyProps, MyState> {
 	 * @param  {string} numStr Numeric String
 	 * @return {string}        formatted Value
 	 */
-	formatWithPattern(numStr: string) {
+	formatWithPattern(numStr: string): string {
 		const { format } = this.props;
 		let hashCount = 0;
 		const formattedNumberAry = format.split("");
@@ -470,7 +452,7 @@ class CurrencyFormat extends Component<MyProps, MyState> {
 	 * @param {*} thousandSeparator
 	 * @param {*} thousandSpacing
 	 */
-	formatThousand(beforeDecimal: any, thousandSeparator: string | boolean, thousandSpacing = "3") {
+	formatThousand(beforeDecimal: any, thousandSeparator: string | boolean, thousandSpacing: any = "3") {
 		let digitalGroup;
 		switch (thousandSpacing) {
 			case thousandGroupSpacing.two:
@@ -492,7 +474,7 @@ class CurrencyFormat extends Component<MyProps, MyState> {
 	 * @param  {string} numStr Numeric string/floatString] It always have decimalSeparator as .
 	 * @return {string} formatted Value
 	 */
-	formatAsNumber(numStr: string) {
+	formatAsNumber(numStr: string): string {
 		const { decimalScale, fixedDecimalScale, prefix, suffix } = this.props;
 		const { thousandSeparator, decimalSeparator, thousandSpacing = "3" } = this.getSeparators();
 
@@ -866,7 +848,5 @@ class CurrencyFormat extends Component<MyProps, MyState> {
 		return <input {...inputProps} />;
 	}
 }
-
-CurrencyFormat.defaultProps = defaultProps;
 
 export default CurrencyFormat;
