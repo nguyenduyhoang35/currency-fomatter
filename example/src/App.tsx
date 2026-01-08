@@ -44,8 +44,6 @@ const BasicCurrency = () => {
           thousandSeparator=","
           decimalSeparator="."
           prefix="$"
-          decimalScale={2}
-          fixedDecimalScale
           onValueChange={(values: ValueObject) => setValue(values.value)}
         />
       </div>
@@ -302,14 +300,13 @@ const NegativeNumbers = () => {
   );
 };
 
-// 11. Custom Input
+// 11. Custom Input - CustomInput must be defined outside to prevent re-mount on every render
+const CustomInput = (props: React.InputHTMLAttributes<HTMLInputElement>) => (
+  <input {...props} className="custom-input" />
+);
+
 const CustomInputExample = () => {
   const [value, setValue] = useState("1000");
-
-  const CustomInput = React.forwardRef<
-    HTMLInputElement,
-    React.InputHTMLAttributes<HTMLInputElement>
-  >((props, ref) => <input {...props} ref={ref} className="custom-input" />);
 
   return (
     <ExampleCard
@@ -321,6 +318,7 @@ const CustomInputExample = () => {
       <div className="input-wrapper">
         <CurrencyFormat
           value={value}
+          //@ts-ignore
           customInput={CustomInput}
           thousandSeparator=","
           prefix="$"

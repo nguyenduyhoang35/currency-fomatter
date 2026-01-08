@@ -23,10 +23,6 @@ export const thousandGroupSpacing: Record<string, ThousandSpacing> = {
 };
 
 // Basic utility functions
-export const noop = (): void => {};
-
-export const returnTrue = (): boolean => true;
-
 export const charIsNumber = (char?: string): boolean => {
   return !!(char || "").match(/\d/);
 };
@@ -132,6 +128,7 @@ export const setCaretPosition = (
 
   // This is used to not only get "focus", but to make sure we don't have everything selected
   // (it causes an issue in chrome, and having it doesn't hurt any other browser)
+  // eslint-disable-next-line no-self-assign
   el.value = el.value;
 
   // For older IE support

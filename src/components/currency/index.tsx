@@ -14,8 +14,6 @@ import React, {
 } from "react";
 
 import {
-  noop,
-  returnTrue,
   charIsNumber,
   escapeRegExp,
   fixLeadingZero,
@@ -108,7 +106,7 @@ const PROPS_TO_OMIT: string[] = [
   "renderText",
 ];
 
-const CurrencyFormat: React.FC<CurrencyFormatProps> = (props) => {
+function CurrencyFormat(props: CurrencyFormatProps): JSX.Element | null {
   const {
     displayType = "input",
     decimalSeparator = ".",
@@ -120,13 +118,13 @@ const CurrencyFormat: React.FC<CurrencyFormatProps> = (props) => {
     allowNegative = true,
     isNumericString: isNumericStringProp = false,
     type = "text",
-    onValueChange = noop,
-    onChange: onChangeProp = noop,
-    onKeyDown: onKeyDownProp = noop,
-    onMouseUp: onMouseUpProp = noop,
-    onFocus: onFocusProp = noop,
-    onBlur: onBlurProp = noop,
-    isAllowed = returnTrue,
+    onValueChange,
+    onChange: onChangeProp,
+    onKeyDown: onKeyDownProp,
+    onMouseUp: onMouseUpProp,
+    onFocus: onFocusProp,
+    onBlur: onBlurProp,
+    isAllowed,
     format,
     decimalScale,
     mask = " ",
@@ -738,7 +736,7 @@ const CurrencyFormat: React.FC<CurrencyFormatProps> = (props) => {
         floatValue: parseFloat(numAsString),
       };
 
-      if (!isAllowed(valueObj)) {
+      if (isAllowed && !isAllowed(valueObj)) {
         formattedValue = lastValue;
       }
 
@@ -754,10 +752,10 @@ const CurrencyFormat: React.FC<CurrencyFormatProps> = (props) => {
 
       if (formattedValue !== lastValue) {
         setState({ value: formattedValue, numAsString });
-        onValueChange(valueObj);
-        onChangeProp(e);
+        onValueChange?.(valueObj);
+        onChangeProp?.(e);
       } else {
-        onChangeProp(e);
+        onChangeProp?.(e);
       }
     },
     [
@@ -789,12 +787,12 @@ const CurrencyFormat: React.FC<CurrencyFormatProps> = (props) => {
 
         if (formattedValue !== lastValue) {
           setState({ value: formattedValue, numAsString });
-          onValueChange(valueObj);
-          onBlurProp(e);
+          onValueChange?.(valueObj);
+          onBlurProp?.(e);
           return;
         }
       }
-      onBlurProp(e);
+      onBlurProp?.(e);
     },
     [state, format, formatNumString, onValueChange, onBlurProp]
   );
@@ -824,7 +822,7 @@ const CurrencyFormat: React.FC<CurrencyFormatProps> = (props) => {
         expectedCaretPosition === undefined ||
         selectionStart !== selectionEnd
       ) {
-        onKeyDownProp(e);
+        onKeyDownProp?.(e);
         return;
       }
 
@@ -889,7 +887,7 @@ const CurrencyFormat: React.FC<CurrencyFormatProps> = (props) => {
         setPatchedCaretPosition(el, newCaretPosition, value);
       }
 
-      onKeyDownProp(e);
+      onKeyDownProp?.(e);
     },
     [
       decimalScale,
@@ -916,7 +914,7 @@ const CurrencyFormat: React.FC<CurrencyFormatProps> = (props) => {
         }
       }
 
-      onMouseUpProp(e);
+      onMouseUpProp?.(e);
     },
     [correctCaretPosition, setPatchedCaretPosition, onMouseUpProp]
   );
@@ -933,7 +931,7 @@ const CurrencyFormat: React.FC<CurrencyFormatProps> = (props) => {
           setPatchedCaretPosition(el, caretPosition, value);
         }
 
-        onFocusProp(e);
+        onFocusProp?.(e);
       });
     },
     [correctCaretPosition, setPatchedCaretPosition, onFocusProp]
@@ -1026,6 +1024,6 @@ const CurrencyFormat: React.FC<CurrencyFormatProps> = (props) => {
   }
 
   return <input {...inputProps} />;
-};
+}
 
 export default CurrencyFormat;
