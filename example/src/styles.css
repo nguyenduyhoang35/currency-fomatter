@@ -30,6 +30,25 @@ h1 {
   margin-bottom: 40px;
 }
 
+/* Section Headers */
+.section-header {
+  margin-top: 48px;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.section-header h2 {
+  font-size: 20px;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.section-header p {
+  font-size: 14px;
+  color: #666;
+}
+
 .examples-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
@@ -65,7 +84,8 @@ h1 {
   margin-bottom: 12px;
 }
 
-.input-wrapper input {
+.input-wrapper input,
+.input-wrapper select {
   width: 100%;
   padding: 12px 16px;
   font-size: 18px;
@@ -73,9 +93,93 @@ h1 {
   border-radius: 8px;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
+  background: white;
 }
 
-.input-wrapper input:focus {
+.input-wrapper input:focus,
+.input-wrapper select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* Input Row for multiple inputs */
+.input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.input-row input {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  outline: none;
+}
+
+.input-row input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.small-input {
+  font-size: 14px !important;
+}
+
+/* Button Row */
+.button-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.button-row button {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  background: #007bff;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.button-row button:hover {
+  background: #0056b3;
+}
+
+.button-row button:nth-child(2) {
+  background: #6c757d;
+}
+
+.button-row button:nth-child(2):hover {
+  background: #545b62;
+}
+
+.button-row button:nth-child(3) {
+  background: #dc3545;
+}
+
+.button-row button:nth-child(3):hover {
+  background: #c82333;
+}
+
+/* Locale Select */
+.locale-select {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  outline: none;
+  background: white;
+  cursor: pointer;
+}
+
+.locale-select:focus {
   border-color: #007bff;
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
@@ -93,6 +197,19 @@ h1 {
   color: #e83e8c;
 }
 
+/* Code Block */
+.code-block {
+  font-size: 11px;
+  color: #495057;
+  background: #f1f3f4;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: "Monaco", "Menlo", monospace;
+  margin-top: 8px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
 .text-display {
   font-size: 24px;
   font-weight: 600;
@@ -101,6 +218,7 @@ h1 {
   background: #f8f9fa;
   border-radius: 8px;
   text-align: center;
+  margin-bottom: 12px;
 }
 
 .custom-input {
@@ -118,6 +236,7 @@ h1 {
   box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.15);
 }
 
+/* Badges */
 .badge {
   display: inline-block;
   padding: 2px 8px;
@@ -150,4 +269,39 @@ h1 {
 .badge-custom {
   background: #e2d9f3;
   color: #4a2c82;
+}
+
+.badge-locale {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.badge-hook {
+  background: #ffeeba;
+  color: #856404;
+}
+
+.badge-utility {
+  background: #c3e6cb;
+  color: #155724;
+}
+
+.badge-compact {
+  background: #bee5eb;
+  color: #0c5460;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .examples-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .input-row {
+    flex-direction: column;
+  }
+
+  .button-row {
+    flex-direction: column;
+  }
 }

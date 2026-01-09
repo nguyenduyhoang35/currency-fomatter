@@ -4,6 +4,8 @@ import React, {
   useCallback,
   useRef,
   useMemo,
+  useImperativeHandle,
+  forwardRef,
   ComponentType,
   InputHTMLAttributes,
   FocusEvent,
@@ -28,14 +30,52 @@ import {
   SplitDecimalResult,
 } from "./utils";
 
-// Re-export types from utils
-export type { ThousandSpacing, ValueObject } from "./utils";
+// Re-export types and utilities from utils
+export type {
+  ThousandSpacing,
+  ValueObject,
+  FormatCurrencyOptions,
+  ParseCurrencyOptions,
+  CompactDisplayOptions,
+  FormatCompactOptions,
+} from "./utils";
+export {
+  formatCurrency,
+  parseCurrency,
+  formatCompact,
+  parseCompact,
+  defaultCompactDisplay,
+} from "./utils";
+
+// Re-export hooks
+export { useCurrencyFormat } from "./hooks";
+export type { UseCurrencyFormatOptions, UseCurrencyFormatReturn } from "./hooks";
+
+// Re-export locales
+export {
+  localePresets,
+  getLocaleConfig,
+  getFormatOptionsFromLocale,
+  // Dynamic locale detection
+  detectLocaleFormat,
+  getCompactLabels,
+  createLocaleConfig,
+  getAutoLocaleConfig,
+  formatWithIntl,
+  // Custom locale registry
+  registerLocale,
+  unregisterLocale,
+} from "./locales";
+export type { LocaleConfig } from "./locales";
 
 // Types
 export type FormatFunction = (value: string) => string;
 export type RemoveFormattingFunction = (value: string) => string;
 export type IsAllowedFunction = (values: ValueObject) => boolean;
-export type OnValueChangeFunction = (values: ValueObject) => void;
+export type OnValueChangeFunction = (
+  values: ValueObject,
+  sourceInfo?: { event?: ChangeEvent<HTMLInputElement>; source: "event" | "prop" }
+) => void;
 export type RenderTextFunction = (
   value: string,
   otherProps: Record<string, unknown>
@@ -47,6 +87,7 @@ export interface CurrencyFormatProps
     "value" | "onChange" | "onKeyDown" | "onMouseUp" | "onFocus" | "onBlur"
   > {
   value?: string | number;
+  name?: string;
   format?: string | FormatFunction;
   decimalScale?: number;
   decimalSeparator?: string;
@@ -70,6 +111,7 @@ export interface CurrencyFormatProps
   displayType?: "input" | "text";
   customInput?: ComponentType<InputHTMLAttributes<HTMLInputElement>>;
   renderText?: RenderTextFunction;
+  getInputRef?: (el: HTMLInputElement | null) => void;
 }
 
 interface Separators {
@@ -104,42 +146,49 @@ const PROPS_TO_OMIT: string[] = [
   "displayType",
   "customInput",
   "renderText",
+  "getInputRef",
 ];
 
-function CurrencyFormat(props: CurrencyFormatProps): JSX.Element | null {
-  const {
-    displayType = "input",
-    decimalSeparator = ".",
-    thousandSpacing = "3",
-    thousandSeparator = ",",
-    fixedDecimalScale = false,
-    prefix = "",
-    suffix = "",
-    allowNegative = true,
-    isNumericString: isNumericStringProp = false,
-    type = "text",
-    onValueChange,
-    onChange: onChangeProp,
-    onKeyDown: onKeyDownProp,
-    onMouseUp: onMouseUpProp,
-    onFocus: onFocusProp,
-    onBlur: onBlurProp,
-    isAllowed,
-    format,
-    decimalScale,
-    mask = " ",
-    removeFormatting: removeFormattingProp,
-    value: valueProp,
-    customInput,
-    renderText,
-    className = "",
-    placeholder = "",
-    ...restProps
-  } = props;
+const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
+  (props, ref): JSX.Element | null => {
+    const {
+      displayType = "input",
+      decimalSeparator = ".",
+      thousandSpacing = "3",
+      thousandSeparator = ",",
+      fixedDecimalScale = false,
+      prefix = "",
+      suffix = "",
+      allowNegative = true,
+      isNumericString: isNumericStringProp = false,
+      type = "text",
+      name,
+      onValueChange,
+      onChange: onChangeProp,
+      onKeyDown: onKeyDownProp,
+      onMouseUp: onMouseUpProp,
+      onFocus: onFocusProp,
+      onBlur: onBlurProp,
+      isAllowed,
+      format,
+      decimalScale,
+      mask = " ",
+      removeFormatting: removeFormattingProp,
+      value: valueProp,
+      customInput,
+      renderText,
+      getInputRef,
+      className = "",
+      placeholder = "",
+      ...restProps
+    } = props;
 
-  // Refs
-  const inputRef = useRef<HTMLInputElement>(null);
-  const prevPropsRef = useRef<CurrencyFormatProps>(props);
+    // Refs
+    const inputRef = useRef<HTMLInputElement>(null);
+    const prevPropsRef = useRef<CurrencyFormatProps>(props);
+
+    // Forward ref
+    useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
 
   // Helper functions using useCallback for memoization
   const getSeparators = useCallback((): Separators => {
@@ -734,6 +783,7 @@ function CurrencyFormat(props: CurrencyFormatProps): JSX.Element | null {
         formattedValue,
         value: numAsString,
         floatValue: parseFloat(numAsString),
+        name,
       };
 
       if (isAllowed && !isAllowed(valueObj)) {
@@ -752,7 +802,7 @@ function CurrencyFormat(props: CurrencyFormatProps): JSX.Element | null {
 
       if (formattedValue !== lastValue) {
         setState({ value: formattedValue, numAsString });
-        onValueChange?.(valueObj);
+        onValueChange?.(valueObj, { event: e, source: "event" });
         onChangeProp?.(e);
       } else {
         onChangeProp?.(e);
@@ -768,6 +818,7 @@ function CurrencyFormat(props: CurrencyFormatProps): JSX.Element | null {
       setPatchedCaretPosition,
       onValueChange,
       onChangeProp,
+      name,
     ]
   );
 
@@ -783,18 +834,19 @@ function CurrencyFormat(props: CurrencyFormatProps): JSX.Element | null {
           formattedValue,
           value: numAsString,
           floatValue: parseFloat(numAsString),
+          name,
         };
 
         if (formattedValue !== lastValue) {
           setState({ value: formattedValue, numAsString });
-          onValueChange?.(valueObj);
+          onValueChange?.(valueObj, { source: "event" });
           onBlurProp?.(e);
           return;
         }
       }
       onBlurProp?.(e);
     },
-    [state, format, formatNumString, onValueChange, onBlurProp]
+    [state, format, formatNumString, onValueChange, onBlurProp, name]
   );
 
   const handleKeyDown = useCallback(
@@ -955,10 +1007,22 @@ function CurrencyFormat(props: CurrencyFormatProps): JSX.Element | null {
           : formatValueProp();
 
       if (formattedValue !== state.value) {
+        const newNumAsString = removeFormatting(formattedValue);
         setState({
           value: formattedValue,
-          numAsString: removeFormatting(formattedValue),
+          numAsString: newNumAsString,
         });
+
+        // Notify about prop-driven value change
+        if (onValueChange) {
+          const valueObj: ValueObject = {
+            formattedValue,
+            value: newNumAsString,
+            floatValue: parseFloat(newNumAsString),
+            name,
+          };
+          onValueChange(valueObj, { source: "prop" });
+        }
       }
     }
 
@@ -970,7 +1034,16 @@ function CurrencyFormat(props: CurrencyFormatProps): JSX.Element | null {
     formatNumString,
     formatValueProp,
     removeFormatting,
+    onValueChange,
+    name,
   ]);
+
+  // Effect to call getInputRef callback
+  useEffect(() => {
+    if (getInputRef) {
+      getInputRef(inputRef.current);
+    }
+  }, [getInputRef]);
 
   // Get other props to pass to input
   const otherProps = useMemo(
@@ -983,6 +1056,7 @@ function CurrencyFormat(props: CurrencyFormatProps): JSX.Element | null {
     () => ({
       ...otherProps,
       type,
+      name,
       value: (state.value || "").replace(/^\./, ""),
       onChange: handleChange,
       onKeyDown: handleKeyDown,
@@ -996,6 +1070,7 @@ function CurrencyFormat(props: CurrencyFormatProps): JSX.Element | null {
     [
       otherProps,
       type,
+      name,
       state.value,
       handleChange,
       handleKeyDown,
@@ -1024,6 +1099,9 @@ function CurrencyFormat(props: CurrencyFormatProps): JSX.Element | null {
   }
 
   return <input {...inputProps} />;
-}
+  }
+);
+
+CurrencyFormat.displayName = "CurrencyFormat";
 
 export default CurrencyFormat;
