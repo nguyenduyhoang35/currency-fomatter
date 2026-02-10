@@ -1,5 +1,5 @@
 {
-  "name": "currency-fomatter-example",
+  "name": "kurrency-kit-example",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -10,7 +10,7 @@
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "currency-fomatter": "file:.."
+    "kurrency-kit": "^1.0.0"
   },
   "devDependencies": {
     "@types/react-dom": "18.2.7",

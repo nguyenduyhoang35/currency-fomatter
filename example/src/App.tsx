@@ -19,7 +19,7 @@ import {
   detectLocaleFormat,
   getAutoLocaleConfig,
   formatWithIntl,
-} from "currency-fomatter";
+} from "kurrency-kit";
 
 // ============================================================
 // Shared Components
@@ -880,7 +880,7 @@ const FormatWithIntlDemo = () => {
 const App: React.FC = () => {
   return (
     <div className="container">
-      <h1>currency-fomatter</h1>
+      <h1>kurrency-kit</h1>
       <p className="subtitle">
         The currency toolkit for React — format, parse, and input currencies with zero config.
       </p>
