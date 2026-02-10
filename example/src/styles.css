@@ -291,6 +291,53 @@ h1 {
   color: #0c5460;
 }
 
+.badge-new {
+  background: #ff6b6b;
+  color: #fff;
+}
+
+.badge-iso {
+  background: #845ef7;
+  color: #fff;
+}
+
+.badge-headless {
+  background: #20c997;
+  color: #fff;
+}
+
+/* Layer Badges (header) */
+.layer-badges {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.layer-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 20px;
+}
+
+.layer-1 {
+  background: #c3e6cb;
+  color: #155724;
+}
+
+.layer-2 {
+  background: #ffeeba;
+  color: #856404;
+}
+
+.layer-3 {
+  background: #cce5ff;
+  color: #004085;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   .examples-grid {

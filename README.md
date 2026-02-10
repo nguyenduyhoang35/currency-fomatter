@@ -10,6 +10,8 @@ Unlike other formatting libraries that only give you a component, `currency-foma
 | `useCurrencyInput()` / `useCurrencyFormat()` | React hooks | Headless — bring your own UI |
 | `<CurrencyFormat />` / `<PatternFormat />` | React components | Drop-in input with full formatting |
 
+**[Live Demo](https://dist-wine-psi.vercel.app)**
+
 ```bash
 npm install currency-fomatter
 ```
