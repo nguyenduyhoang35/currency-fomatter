@@ -7,6 +7,112 @@ export interface LocaleConfig extends FormatCurrencyOptions {
   compactDisplay?: CompactDisplayOptions;
 }
 
+export interface CurrencyInfo {
+  code: string;
+  symbol: string;
+  decimalDigits: number;
+  symbolPosition: "prefix" | "suffix";
+  name: string;
+}
+
+/**
+ * ISO 4217 currency database
+ * Knows decimal places, symbol, and position for each currency
+ */
+export const currencyDatabase: Record<string, CurrencyInfo> = {
+  USD: { code: "USD", symbol: "$", decimalDigits: 2, symbolPosition: "prefix", name: "US Dollar" },
+  EUR: { code: "EUR", symbol: "€", decimalDigits: 2, symbolPosition: "suffix", name: "Euro" },
+  GBP: { code: "GBP", symbol: "£", decimalDigits: 2, symbolPosition: "prefix", name: "British Pound" },
+  JPY: { code: "JPY", symbol: "¥", decimalDigits: 0, symbolPosition: "prefix", name: "Japanese Yen" },
+  CNY: { code: "CNY", symbol: "¥", decimalDigits: 2, symbolPosition: "prefix", name: "Chinese Yuan" },
+  KRW: { code: "KRW", symbol: "₩", decimalDigits: 0, symbolPosition: "prefix", name: "South Korean Won" },
+  INR: { code: "INR", symbol: "₹", decimalDigits: 2, symbolPosition: "prefix", name: "Indian Rupee" },
+  VND: { code: "VND", symbol: "₫", decimalDigits: 0, symbolPosition: "suffix", name: "Vietnamese Dong" },
+  BRL: { code: "BRL", symbol: "R$", decimalDigits: 2, symbolPosition: "prefix", name: "Brazilian Real" },
+  RUB: { code: "RUB", symbol: "₽", decimalDigits: 2, symbolPosition: "suffix", name: "Russian Ruble" },
+  THB: { code: "THB", symbol: "฿", decimalDigits: 2, symbolPosition: "prefix", name: "Thai Baht" },
+  IDR: { code: "IDR", symbol: "Rp", decimalDigits: 0, symbolPosition: "prefix", name: "Indonesian Rupiah" },
+  MYR: { code: "MYR", symbol: "RM", decimalDigits: 2, symbolPosition: "prefix", name: "Malaysian Ringgit" },
+  SGD: { code: "SGD", symbol: "S$", decimalDigits: 2, symbolPosition: "prefix", name: "Singapore Dollar" },
+  PHP: { code: "PHP", symbol: "₱", decimalDigits: 2, symbolPosition: "prefix", name: "Philippine Peso" },
+  TWD: { code: "TWD", symbol: "NT$", decimalDigits: 0, symbolPosition: "prefix", name: "Taiwan Dollar" },
+  HKD: { code: "HKD", symbol: "HK$", decimalDigits: 2, symbolPosition: "prefix", name: "Hong Kong Dollar" },
+  AUD: { code: "AUD", symbol: "A$", decimalDigits: 2, symbolPosition: "prefix", name: "Australian Dollar" },
+  CAD: { code: "CAD", symbol: "C$", decimalDigits: 2, symbolPosition: "prefix", name: "Canadian Dollar" },
+  NZD: { code: "NZD", symbol: "NZ$", decimalDigits: 2, symbolPosition: "prefix", name: "New Zealand Dollar" },
+  CHF: { code: "CHF", symbol: "CHF", decimalDigits: 2, symbolPosition: "prefix", name: "Swiss Franc" },
+  SEK: { code: "SEK", symbol: "kr", decimalDigits: 2, symbolPosition: "suffix", name: "Swedish Krona" },
+  NOK: { code: "NOK", symbol: "kr", decimalDigits: 2, symbolPosition: "prefix", name: "Norwegian Krone" },
+  DKK: { code: "DKK", symbol: "kr", decimalDigits: 2, symbolPosition: "prefix", name: "Danish Krone" },
+  PLN: { code: "PLN", symbol: "zł", decimalDigits: 2, symbolPosition: "suffix", name: "Polish Zloty" },
+  CZK: { code: "CZK", symbol: "Kč", decimalDigits: 2, symbolPosition: "suffix", name: "Czech Koruna" },
+  HUF: { code: "HUF", symbol: "Ft", decimalDigits: 0, symbolPosition: "suffix", name: "Hungarian Forint" },
+  TRY: { code: "TRY", symbol: "₺", decimalDigits: 2, symbolPosition: "prefix", name: "Turkish Lira" },
+  ZAR: { code: "ZAR", symbol: "R", decimalDigits: 2, symbolPosition: "prefix", name: "South African Rand" },
+  MXN: { code: "MXN", symbol: "$", decimalDigits: 2, symbolPosition: "prefix", name: "Mexican Peso" },
+  ARS: { code: "ARS", symbol: "$", decimalDigits: 2, symbolPosition: "prefix", name: "Argentine Peso" },
+  CLP: { code: "CLP", symbol: "$", decimalDigits: 0, symbolPosition: "prefix", name: "Chilean Peso" },
+  COP: { code: "COP", symbol: "$", decimalDigits: 0, symbolPosition: "prefix", name: "Colombian Peso" },
+  PEN: { code: "PEN", symbol: "S/", decimalDigits: 2, symbolPosition: "prefix", name: "Peruvian Sol" },
+  AED: { code: "AED", symbol: "د.إ", decimalDigits: 2, symbolPosition: "suffix", name: "UAE Dirham" },
+  SAR: { code: "SAR", symbol: "﷼", decimalDigits: 2, symbolPosition: "suffix", name: "Saudi Riyal" },
+  EGP: { code: "EGP", symbol: "E£", decimalDigits: 2, symbolPosition: "prefix", name: "Egyptian Pound" },
+  NGN: { code: "NGN", symbol: "₦", decimalDigits: 2, symbolPosition: "prefix", name: "Nigerian Naira" },
+  KES: { code: "KES", symbol: "KSh", decimalDigits: 2, symbolPosition: "prefix", name: "Kenyan Shilling" },
+  ILS: { code: "ILS", symbol: "₪", decimalDigits: 2, symbolPosition: "prefix", name: "Israeli Shekel" },
+  PKR: { code: "PKR", symbol: "₨", decimalDigits: 0, symbolPosition: "prefix", name: "Pakistani Rupee" },
+  BDT: { code: "BDT", symbol: "৳", decimalDigits: 2, symbolPosition: "prefix", name: "Bangladeshi Taka" },
+  UAH: { code: "UAH", symbol: "₴", decimalDigits: 2, symbolPosition: "suffix", name: "Ukrainian Hryvnia" },
+  RON: { code: "RON", symbol: "lei", decimalDigits: 2, symbolPosition: "suffix", name: "Romanian Leu" },
+  BGN: { code: "BGN", symbol: "лв", decimalDigits: 2, symbolPosition: "suffix", name: "Bulgarian Lev" },
+  HRK: { code: "HRK", symbol: "kn", decimalDigits: 2, symbolPosition: "suffix", name: "Croatian Kuna" },
+  ISK: { code: "ISK", symbol: "kr", decimalDigits: 0, symbolPosition: "prefix", name: "Icelandic Krona" },
+  BHD: { code: "BHD", symbol: "BD", decimalDigits: 3, symbolPosition: "prefix", name: "Bahraini Dinar" },
+  KWD: { code: "KWD", symbol: "KD", decimalDigits: 3, symbolPosition: "prefix", name: "Kuwaiti Dinar" },
+  OMR: { code: "OMR", symbol: "OMR", decimalDigits: 3, symbolPosition: "prefix", name: "Omani Rial" },
+};
+
+/**
+ * Get format options from a currency code (ISO 4217)
+ * Automatically configures decimal places, symbol, and position
+ *
+ * @example
+ * getCurrencyConfig("JPY")  // → { prefix: "¥", decimalScale: 0, ... }
+ * getCurrencyConfig("EUR")  // → { suffix: " €", decimalScale: 2, ... }
+ * getCurrencyConfig("BHD")  // → { prefix: "BD", decimalScale: 3, ... }
+ */
+export const getCurrencyConfig = (
+  currencyCode: string,
+  options?: { locale?: string }
+): FormatCurrencyOptions => {
+  const code = currencyCode.toUpperCase();
+  const info = currencyDatabase[code];
+
+  if (info) {
+    return {
+      prefix: info.symbolPosition === "prefix" ? info.symbol : "",
+      suffix: info.symbolPosition === "suffix" ? " " + info.symbol : "",
+      decimalScale: info.decimalDigits,
+      fixedDecimalScale: true,
+      thousandSeparator: ",",
+      decimalSeparator: ".",
+    };
+  }
+
+  // Fallback: try Intl.NumberFormat for unknown currencies
+  if (options?.locale) {
+    return detectLocaleFormat(options.locale, code);
+  }
+
+  return {
+    prefix: code + " ",
+    decimalScale: 2,
+    fixedDecimalScale: true,
+    thousandSeparator: ",",
+    decimalSeparator: ".",
+  };
+};
+
 /**
  * Detect locale format options from browser's Intl.NumberFormat
  * This provides dynamic locale support without hardcoding

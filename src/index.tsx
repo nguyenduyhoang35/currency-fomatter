@@ -1,10 +1,12 @@
 import CurrencyFormat, {
+  PatternFormat,
   formatCurrency,
   parseCurrency,
   formatCompact,
   parseCompact,
   defaultCompactDisplay,
   useCurrencyFormat,
+  useCurrencyInput,
   localePresets,
   getLocaleConfig,
   getFormatOptionsFromLocale,
@@ -15,10 +17,13 @@ import CurrencyFormat, {
   formatWithIntl,
   registerLocale,
   unregisterLocale,
+  currencyDatabase,
+  getCurrencyConfig,
 } from "./components/currency";
 
 export {
   CurrencyFormat,
+  PatternFormat,
   // Utility functions
   formatCurrency,
   parseCurrency,
@@ -27,6 +32,7 @@ export {
   defaultCompactDisplay,
   // Hooks
   useCurrencyFormat,
+  useCurrencyInput,
   // Locales (static presets)
   localePresets,
   getLocaleConfig,
@@ -40,12 +46,16 @@ export {
   // Custom locale registry
   registerLocale,
   unregisterLocale,
+  // Currency database (ISO 4217)
+  currencyDatabase,
+  getCurrencyConfig,
 };
 
 export default CurrencyFormat;
 
 export type {
   CurrencyFormatProps,
+  ThousandsGroupStyle,
   ValueObject,
   ThousandSpacing,
   FormatFunction,
@@ -59,5 +69,9 @@ export type {
   FormatCompactOptions,
   UseCurrencyFormatOptions,
   UseCurrencyFormatReturn,
+  UseCurrencyInputOptions,
+  UseCurrencyInputReturn,
   LocaleConfig,
+  CurrencyInfo,
+  PatternFormatProps,
 } from "./components/currency";

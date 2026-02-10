@@ -12,6 +12,7 @@ import React, {
   KeyboardEvent,
   ChangeEvent,
   MouseEvent,
+  CompositionEvent,
   ReactNode,
 } from "react";
 
@@ -47,9 +48,18 @@ export {
   defaultCompactDisplay,
 } from "./utils";
 
+// Re-export PatternFormat
+export { default as PatternFormat } from "./PatternFormat";
+export type { PatternFormatProps } from "./PatternFormat";
+
 // Re-export hooks
-export { useCurrencyFormat } from "./hooks";
-export type { UseCurrencyFormatOptions, UseCurrencyFormatReturn } from "./hooks";
+export { useCurrencyFormat, useCurrencyInput } from "./hooks";
+export type {
+  UseCurrencyFormatOptions,
+  UseCurrencyFormatReturn,
+  UseCurrencyInputOptions,
+  UseCurrencyInputReturn,
+} from "./hooks";
 
 // Re-export locales
 export {
@@ -65,8 +75,11 @@ export {
   // Custom locale registry
   registerLocale,
   unregisterLocale,
+  // Currency database (ISO 4217)
+  currencyDatabase,
+  getCurrencyConfig,
 } from "./locales";
-export type { LocaleConfig } from "./locales";
+export type { LocaleConfig, CurrencyInfo } from "./locales";
 
 // Types
 export type FormatFunction = (value: string) => string;
@@ -81,20 +94,26 @@ export type RenderTextFunction = (
   otherProps: Record<string, unknown>
 ) => ReactNode;
 
+export type ThousandsGroupStyle = "thousand" | "lakh" | "wan" | "none";
+
 export interface CurrencyFormatProps
   extends Omit<
     InputHTMLAttributes<HTMLInputElement>,
-    "value" | "onChange" | "onKeyDown" | "onMouseUp" | "onFocus" | "onBlur"
+    "value" | "defaultValue" | "onChange" | "onKeyDown" | "onMouseUp" | "onFocus" | "onBlur"
   > {
   value?: string | number;
+  defaultValue?: string | number;
   name?: string;
   format?: string | FormatFunction;
   decimalScale?: number;
   decimalSeparator?: string;
+  allowedDecimalSeparators?: string[];
   thousandSpacing?: ThousandSpacing;
   thousandSeparator?: string | boolean;
+  thousandsGroupStyle?: ThousandsGroupStyle;
   mask?: string | string[];
   allowNegative?: boolean;
+  allowEmptyFormatting?: boolean;
   prefix?: string;
   suffix?: string;
   removeFormatting?: RemoveFormattingFunction;
@@ -108,6 +127,7 @@ export interface CurrencyFormatProps
   onFocus?: (e: FocusEvent<HTMLInputElement>) => void;
   onBlur?: (e: FocusEvent<HTMLInputElement>) => void;
   type?: "text" | "tel";
+  inputMode?: "numeric" | "decimal" | "text";
   displayType?: "input" | "text";
   customInput?: ComponentType<InputHTMLAttributes<HTMLInputElement>>;
   renderText?: RenderTextFunction;
@@ -123,13 +143,17 @@ interface Separators {
 // Props keys to omit when passing to DOM
 const PROPS_TO_OMIT: string[] = [
   "value",
+  "defaultValue",
   "format",
   "decimalScale",
   "decimalSeparator",
+  "allowedDecimalSeparators",
   "thousandSpacing",
   "thousandSeparator",
+  "thousandsGroupStyle",
   "mask",
   "allowNegative",
+  "allowEmptyFormatting",
   "prefix",
   "suffix",
   "removeFormatting",
@@ -143,10 +167,13 @@ const PROPS_TO_OMIT: string[] = [
   "onFocus",
   "onBlur",
   "type",
+  "inputMode",
   "displayType",
   "customInput",
   "renderText",
   "getInputRef",
+  "disabled",
+  "readOnly",
 ];
 
 const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
@@ -154,12 +181,15 @@ const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
     const {
       displayType = "input",
       decimalSeparator = ".",
-      thousandSpacing = "3",
+      allowedDecimalSeparators,
+      thousandSpacing: thousandSpacingProp,
       thousandSeparator = ",",
+      thousandsGroupStyle,
       fixedDecimalScale = false,
       prefix = "",
       suffix = "",
       allowNegative = true,
+      allowEmptyFormatting = false,
       isNumericString: isNumericStringProp = false,
       type = "text",
       name,
@@ -175,20 +205,43 @@ const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
       mask = " ",
       removeFormatting: removeFormattingProp,
       value: valueProp,
+      defaultValue: defaultValueProp,
       customInput,
       renderText,
       getInputRef,
+      inputMode: inputModeProp,
       className = "",
       placeholder = "",
+      disabled,
+      readOnly,
       ...restProps
     } = props;
 
     // Refs
     const inputRef = useRef<HTMLInputElement>(null);
     const prevPropsRef = useRef<CurrencyFormatProps>(props);
+    const isComposingRef = useRef<boolean>(false);
 
     // Forward ref
     useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
+
+    // Resolve thousandSpacing from thousandsGroupStyle or direct prop
+    const thousandSpacing = useMemo((): ThousandSpacing => {
+      if (thousandSpacingProp) return thousandSpacingProp;
+      if (thousandsGroupStyle) {
+        switch (thousandsGroupStyle) {
+          case "lakh": return "2s";
+          case "wan": return "4";
+          case "none": return "3"; // fallback, thousand separator handles "none"
+          case "thousand":
+          default: return "3";
+        }
+      }
+      return "3";
+    }, [thousandSpacingProp, thousandsGroupStyle]);
+
+    // Track if component is uncontrolled (using defaultValue)
+    const isUncontrolled = valueProp === undefined && defaultValueProp !== undefined;
 
   // Helper functions using useCallback for memoization
   const getSeparators = useCallback((): Separators => {
@@ -330,6 +383,11 @@ const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
       let { beforeDecimal, afterDecimal } = splitDecimal(numStr);
       const { addNegation } = splitDecimal(numStr);
 
+      // Ensure leading zero for decimal-only values (e.g., ".5" → "0.5")
+      if (beforeDecimal === "" && hasDecimalSeparator) {
+        beforeDecimal = "0";
+      }
+
       // Apply decimal precision if defined
       if (decimalScale !== undefined) {
         afterDecimal = limitToScale(
@@ -452,7 +510,16 @@ const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
       let formattedValue = value;
 
       if (value === "") {
-        formattedValue = "";
+        if (allowEmptyFormatting) {
+          // Show prefix/suffix or pattern mask when empty
+          if (typeof format === "string") {
+            formattedValue = formatWithPattern("");
+          } else if (!format) {
+            formattedValue = prefix + suffix;
+          }
+        } else {
+          formattedValue = "";
+        }
       } else if (value === "-" && !format) {
         formattedValue = "-";
       } else if (typeof format === "string") {
@@ -465,7 +532,7 @@ const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
 
       return formattedValue;
     },
-    [format, formatWithPattern, formatAsNumber]
+    [format, formatWithPattern, formatAsNumber, allowEmptyFormatting, prefix, suffix]
   );
 
   const formatNegation = useCallback(
@@ -499,7 +566,8 @@ const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
   );
 
   const formatValueProp = useCallback((): string => {
-    let value = valueProp;
+    // Use value prop, or defaultValue for initial render of uncontrolled component
+    let value = valueProp ?? defaultValueProp;
     let isNumericString = isNumericStringProp;
 
     if (value === undefined) return "";
@@ -522,6 +590,7 @@ const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
       : formatInput(value as string);
   }, [
     valueProp,
+    defaultValueProp,
     isNumericStringProp,
     format,
     decimalScale,
@@ -758,9 +827,29 @@ const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
     ]
   );
 
+  // IME composition handlers
+  const handleCompositionStart = useCallback((): void => {
+    isComposingRef.current = true;
+  }, []);
+
+  const handleCompositionEnd = useCallback(
+    (e: CompositionEvent<HTMLInputElement>): void => {
+      isComposingRef.current = false;
+      // Trigger change after composition ends
+      const changeEvent = new Event("input", { bubbles: true });
+      e.target.dispatchEvent(changeEvent);
+    },
+    []
+  );
+
   // Event handlers
   const handleChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>): void => {
+      // Skip formatting during IME composition
+      if (isComposingRef.current) return;
+      // Skip when disabled or readOnly
+      if (disabled || readOnly) return;
+
       const el = e.target;
       let inputValue = el.value;
       const lastValue = state.value || "";
@@ -819,6 +908,8 @@ const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
       onValueChange,
       onChangeProp,
       name,
+      disabled,
+      readOnly,
     ]
   );
 
@@ -839,7 +930,7 @@ const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
 
         if (formattedValue !== lastValue) {
           setState({ value: formattedValue, numAsString });
-          onValueChange?.(valueObj, { source: "event" });
+          onValueChange?.(valueObj, { event: e as unknown as ChangeEvent<HTMLInputElement>, source: "event" });
           onBlurProp?.(e);
           return;
         }
@@ -856,11 +947,72 @@ const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
       const { selectionEnd, value, selectionStart } = el;
       let expectedCaretPosition: number | undefined;
 
+      // allowedDecimalSeparators: replace alternate keys with the actual decimal separator
+      if (
+        allowedDecimalSeparators &&
+        allowedDecimalSeparators.includes(key) &&
+        key !== decimalSeparator
+      ) {
+        e.preventDefault();
+        const pos = selectionStart || 0;
+        // Insert the actual decimal separator at cursor position
+        const newValue = value.substring(0, pos) + decimalSeparator + value.substring(selectionEnd || pos);
+        el.value = newValue;
+        el.setSelectionRange(pos + 1, pos + 1);
+        // Trigger a synthetic input event so handleChange processes the new value
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+        onKeyDownProp?.(e);
+        return;
+      }
+
       const ignoreDecimalSeparator =
         decimalScale !== undefined && fixedDecimalScale;
       const numRegex = getNumberRegex(false, ignoreDecimalSeparator);
       const negativeRegex = new RegExp("-");
       const isPatternFormat = typeof format === "string";
+
+      const leftBound = isPatternFormat
+        ? (format as string).indexOf("#")
+        : prefix.length + (value[0] === "-" ? 1 : 0);
+      const rightBound = isPatternFormat
+        ? (format as string).lastIndexOf("#") + 1
+        : value.length - suffix.length;
+
+      // Handle Enter key: format value like blur (skip for readOnly/disabled)
+      if (key === "Enter" && !format && !readOnly && !disabled) {
+        let numAsString = state.numAsString || "";
+        numAsString = fixLeadingZero(numAsString) || "";
+        const formattedValue = formatNumString(numAsString);
+        if (formattedValue !== state.value) {
+          const valueObj: ValueObject = {
+            formattedValue,
+            value: numAsString,
+            floatValue: parseFloat(numAsString),
+            name,
+          };
+          setState({ value: formattedValue, numAsString });
+          onValueChange?.(valueObj, { source: "event" });
+          el.value = formattedValue;
+        }
+        onKeyDownProp?.(e);
+        return;
+      }
+
+      // Handle Home key: move cursor after prefix
+      if (key === "Home" && selectionStart === selectionEnd) {
+        e.preventDefault();
+        setPatchedCaretPosition(el, leftBound, value);
+        onKeyDownProp?.(e);
+        return;
+      }
+
+      // Handle End key: move cursor before suffix
+      if (key === "End" && selectionStart === selectionEnd) {
+        e.preventDefault();
+        setPatchedCaretPosition(el, rightBound, value);
+        onKeyDownProp?.(e);
+        return;
+      }
 
       if (key === "ArrowLeft" || key === "Backspace") {
         expectedCaretPosition = (selectionStart || 0) - 1;
@@ -879,12 +1031,6 @@ const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
       }
 
       let newCaretPosition = expectedCaretPosition;
-      const leftBound = isPatternFormat
-        ? (format as string).indexOf("#")
-        : prefix.length;
-      const rightBound = isPatternFormat
-        ? (format as string).lastIndexOf("#") + 1
-        : value.length - suffix.length;
 
       if (key === "ArrowLeft" || key === "ArrowRight") {
         const direction = key === "ArrowLeft" ? "left" : "right";
@@ -951,6 +1097,15 @@ const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
       correctCaretPosition,
       setPatchedCaretPosition,
       onKeyDownProp,
+      state.numAsString,
+      state.value,
+      formatNumString,
+      onValueChange,
+      name,
+      readOnly,
+      disabled,
+      allowedDecimalSeparators,
+      decimalSeparator,
     ]
   );
 
@@ -975,6 +1130,10 @@ const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
     (e: FocusEvent<HTMLInputElement>): void => {
       const el = e.target as HTMLInputElement;
 
+      // Fire onFocus immediately so consumers get synchronous feedback
+      onFocusProp?.(e);
+
+      // Defer caret correction to avoid interfering with focus behavior
       setTimeout(() => {
         const { selectionStart, value } = el;
         const caretPosition = correctCaretPosition(value, selectionStart || 0);
@@ -982,8 +1141,6 @@ const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
         if (caretPosition !== selectionStart) {
           setPatchedCaretPosition(el, caretPosition, value);
         }
-
-        onFocusProp?.(e);
       });
     },
     [correctCaretPosition, setPatchedCaretPosition, onFocusProp]
@@ -999,29 +1156,44 @@ const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
     const prevProps = prevPropsRef.current;
 
     if (prevProps !== props) {
-      const lastNumStr = state.numAsString || "";
+      // For uncontrolled component (using defaultValue), only reformat
+      // when format-related props change, not on every render
+      if (isUncontrolled && valueProp === undefined) {
+        // Re-format existing value with new format options
+        const lastNumStr = state.numAsString || "";
+        const formattedValue = formatNumString(lastNumStr);
 
-      const formattedValue =
-        valueProp === undefined
-          ? formatNumString(lastNumStr)
-          : formatValueProp();
+        if (formattedValue !== state.value) {
+          setState({
+            value: formattedValue,
+            numAsString: lastNumStr,
+          });
+        }
+      } else {
+        const lastNumStr = state.numAsString || "";
 
-      if (formattedValue !== state.value) {
-        const newNumAsString = removeFormatting(formattedValue);
-        setState({
-          value: formattedValue,
-          numAsString: newNumAsString,
-        });
+        const formattedValue =
+          valueProp === undefined
+            ? formatNumString(lastNumStr)
+            : formatValueProp();
 
-        // Notify about prop-driven value change
-        if (onValueChange) {
-          const valueObj: ValueObject = {
-            formattedValue,
-            value: newNumAsString,
-            floatValue: parseFloat(newNumAsString),
-            name,
-          };
-          onValueChange(valueObj, { source: "prop" });
+        if (formattedValue !== state.value) {
+          const newNumAsString = removeFormatting(formattedValue);
+          setState({
+            value: formattedValue,
+            numAsString: newNumAsString,
+          });
+
+          // Notify about prop-driven value change
+          if (onValueChange) {
+            const valueObj: ValueObject = {
+              formattedValue,
+              value: newNumAsString,
+              floatValue: parseFloat(newNumAsString),
+              name,
+            };
+            onValueChange(valueObj, { source: "prop" });
+          }
         }
       }
     }
@@ -1030,6 +1202,7 @@ const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
   }, [
     props,
     valueProp,
+    isUncontrolled,
     state,
     formatNumString,
     formatValueProp,
@@ -1051,25 +1224,39 @@ const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
     [restProps]
   );
 
+  // Compute inputMode: prefer explicit prop, else auto-detect
+  const resolvedInputMode = useMemo(() => {
+    if (inputModeProp) return inputModeProp;
+    if (format) return undefined; // pattern format (phone, card) - let browser decide
+    if (decimalScale === 0) return "numeric" as const;
+    return "decimal" as const;
+  }, [inputModeProp, format, decimalScale]);
+
   // Build input props
   const inputProps = useMemo(
     () => ({
       ...otherProps,
       type,
+      inputMode: resolvedInputMode,
       name,
-      value: (state.value || "").replace(/^\./, ""),
+      value: state.value || "",
       onChange: handleChange,
       onKeyDown: handleKeyDown,
       onMouseUp: handleMouseUp,
       onFocus: handleFocus,
       onBlur: handleBlur,
+      onCompositionStart: handleCompositionStart,
+      onCompositionEnd: handleCompositionEnd,
       placeholder,
       className,
+      disabled,
+      readOnly,
       ref: inputRef,
     }),
     [
       otherProps,
       type,
+      resolvedInputMode,
       name,
       state.value,
       handleChange,
@@ -1077,8 +1264,12 @@ const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
       handleMouseUp,
       handleFocus,
       handleBlur,
+      handleCompositionStart,
+      handleCompositionEnd,
       placeholder,
       className,
+      disabled,
+      readOnly,
     ]
   );
 
@@ -1087,7 +1278,11 @@ const CurrencyFormat = forwardRef<HTMLInputElement, CurrencyFormatProps>(
     return renderText ? (
       <>{renderText(state.value || "", otherProps)}</>
     ) : (
-      <span {...(otherProps as React.HTMLAttributes<HTMLSpanElement>)}>
+      <span
+        role="status"
+        aria-live="polite"
+        {...(otherProps as React.HTMLAttributes<HTMLSpanElement>)}
+      >
         {state.value}
       </span>
     );

@@ -1,195 +1,121 @@
 # currency-fomatter
 
-A React component for formatting currency, phone numbers, credit cards, and other numeric inputs with full TypeScript support.
+**The currency toolkit for React** — format, parse, and input currencies with zero config.
 
-## Screenshots
+Unlike other formatting libraries that only give you a component, `currency-fomatter` gives you **3 layers** you can use independently:
 
-![Currency, Phone, Credit Card, Expiry Date, Percentage, Max Amount](https://raw.githubusercontent.com/nguyenduyhoang35/currency-fomatter/main/public/screenshot-1.png)
-
-![Indian Format, Euro, Display Text, Negative Numbers, Custom Input, Custom Format](https://raw.githubusercontent.com/nguyenduyhoang35/currency-fomatter/main/public/screenshot-2.png)
-
-## Installation
+| Layer | What | Use case |
+|-------|------|----------|
+| `formatCurrency()` / `parseCurrency()` | Standalone functions | Node.js, SSR, any JS — no React needed |
+| `useCurrencyInput()` / `useCurrencyFormat()` | React hooks | Headless — bring your own UI |
+| `<CurrencyFormat />` / `<PatternFormat />` | React components | Drop-in input with full formatting |
 
 ```bash
 npm install currency-fomatter
-# or
-yarn add currency-fomatter
 ```
 
-## Features
+## Why currency-fomatter?
 
-- Currency formatting with thousand separators
-- Phone number and credit card masking
-- Custom format patterns
-- Support for multiple number systems (US, Indian, etc.)
-- Prefix and suffix support
-- Decimal scale control
-- Negative number support
-- Custom input component support
-- Full TypeScript support
-- **Standalone utility functions** (`formatCurrency`, `parseCurrency`)
-- **Compact format** (`formatCompact` - 1K, 1M, 1B)
-- **Locale presets** (en-US, vi-VN, de-DE, ja-JP, etc.)
-- **React hook** (`useCurrencyFormat`) for easy state management
-- **ref forwarding** for form library integration
+| Feature | currency-fomatter | react-number-format | react-currency-input-field |
+|---------|:-:|:-:|:-:|
+| Standalone utils (no React) | **Yes** | No | No |
+| Format + Parse symmetry | **Yes** | No | No |
+| Compact format (1K, 1M, 1B) | **Yes** | No | No |
+| ISO 4217 currency database | **Yes** | No | No |
+| Auto locale detection (Intl) | **Yes** | No | Partial |
+| React hook (headless) | **Yes** | No | No |
+| IME support (CJK input) | **Yes** | No | No |
+| Mobile keyboard (`inputMode`) | **Auto** | Manual | Manual |
+| Accessibility (ARIA) | **Built-in** | No | No |
+| Pattern format (phone, card) | **Yes** | Yes | No |
+| Custom input component | **Yes** | Yes | Yes |
+| TypeScript | **Yes** | Yes | Yes |
+| Bundle size | ~8KB | ~7KB | ~10KB |
 
-## Basic Usage
+## Quick Start
+
+### Just format a number (no React)
+
+```ts
+import { formatCurrency, parseCurrency } from "currency-fomatter";
+
+formatCurrency(1234567.89, { prefix: "$", thousandSeparator: "," });
+// → "$1,234,567.89"
+
+parseCurrency("$1,234,567.89", { prefix: "$", thousandSeparator: "," });
+// → { value: "1234567.89", floatValue: 1234567.89 }
+```
+
+### Auto-config from currency code (ISO 4217)
+
+```ts
+import { getCurrencyConfig, formatCurrency } from "currency-fomatter";
+
+const usd = getCurrencyConfig("USD"); // { prefix: "$", decimalScale: 2, ... }
+const jpy = getCurrencyConfig("JPY"); // { prefix: "¥", decimalScale: 0, ... }
+const vnd = getCurrencyConfig("VND"); // { suffix: " ₫", decimalScale: 0, ... }
+
+formatCurrency(1234567, getCurrencyConfig("EUR"));
+// → "1,234,567.00 €"
+```
+
+50+ currencies built-in. Unknown currencies fall back to `Intl.NumberFormat`.
+
+### React component
 
 ```tsx
 import { CurrencyFormat } from "currency-fomatter";
 
-function App() {
-  return (
-    <CurrencyFormat
-      value="1234567.89"
-      thousandSeparator=","
-      decimalSeparator="."
-      prefix="$"
-      decimalScale={2}
-      fixedDecimalScale
-      onValueChange={(values) => {
-        console.log(values.formattedValue); // "$1,234,567.89"
-        console.log(values.value);          // "1234567.89"
-        console.log(values.floatValue);     // 1234567.89
-      }}
-    />
-  );
+<CurrencyFormat
+  value={1234.56}
+  prefix="$"
+  thousandSeparator=","
+  decimalScale={2}
+  fixedDecimalScale
+  onValueChange={(values) => {
+    console.log(values.floatValue); // 1234.56
+  }}
+/>
+```
+
+### React hook — headless, works with ANY input
+
+```tsx
+import { useCurrencyInput } from "currency-fomatter";
+
+function PriceInput() {
+  const { value, formattedValue, getInputProps } = useCurrencyInput({
+    currency: "USD",     // Auto-configures $, 2 decimals
+    initialValue: 1234.56,
+  });
+
+  // Works with plain <input>, Material UI, Chakra, Ant Design — anything
+  return <input {...getInputProps()} />;
 }
 ```
 
-## Examples
-
-### Currency Format
+### Pattern format (phone, card, date)
 
 ```tsx
-<CurrencyFormat
-  value={1234.56}
-  thousandSeparator=","
-  prefix="$"
-  decimalScale={2}
-  fixedDecimalScale
-/>
-// Output: $1,234.56
+import { PatternFormat } from "currency-fomatter";
+
+<PatternFormat format="+1 (###) ###-####" mask="_" />
+// → +1 (555) 123-4567
+
+<PatternFormat format="#### #### #### ####" mask="_" />
+// → 4111 1111 1111 1111
 ```
 
-### Phone Number Format
-
-```tsx
-<CurrencyFormat
-  format="+1 (###) ###-####"
-  mask="_"
-  placeholder="+1 (___) ___-____"
-/>
-// Output: +1 (555) 123-4567
-```
-
-### Credit Card Format
-
-```tsx
-<CurrencyFormat
-  format="#### #### #### ####"
-  mask="_"
-/>
-// Output: 4111 1111 1111 1111
-```
-
-### Percentage with Validation
-
-```tsx
-<CurrencyFormat
-  value="75.5"
-  suffix="%"
-  decimalScale={2}
-  isAllowed={(values) => values.floatValue <= 100}
-/>
-// Output: 75.50%
-```
-
-### Indian Number System
-
-```tsx
-<CurrencyFormat
-  value="1234567"
-  thousandSeparator=","
-  thousandSpacing="2s"
-  prefix="₹"
-/>
-// Output: ₹12,34,567
-```
-
-### Display as Text (Read-only)
-
-```tsx
-<CurrencyFormat
-  value={9999.99}
-  displayType="text"
-  thousandSeparator=","
-  prefix="$"
-/>
-// Output: <span>$9,999.99</span>
-```
-
-### Custom Input Component
-
-```tsx
-const CustomInput = (props) => (
-  <input {...props} className="custom-input" />
-);
-
-<CurrencyFormat
-  value="1000"
-  customInput={CustomInput}
-  thousandSeparator=","
-  prefix="$"
-/>
-```
-
-## Props
-
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `value` | `string \| number` | - | Input value |
-| `format` | `string \| Function` | - | Format pattern (e.g., `"+1 (###) ###-####"`) or custom format function |
-| `decimalScale` | `number` | - | Maximum decimal places |
-| `decimalSeparator` | `string` | `"."` | Decimal separator character |
-| `thousandSeparator` | `string \| boolean` | `","` | Thousand separator (`true` = `","`) |
-| `thousandSpacing` | `"2" \| "2s" \| "3" \| "4"` | `"3"` | Thousand grouping pattern |
-| `mask` | `string \| string[]` | `" "` | Mask character for empty format positions |
-| `prefix` | `string` | `""` | Text before the number (e.g., `"$"`) |
-| `suffix` | `string` | `""` | Text after the number (e.g., `"%"`) |
-| `allowNegative` | `boolean` | `true` | Allow negative values |
-| `fixedDecimalScale` | `boolean` | `false` | Always show decimal places |
-| `isNumericString` | `boolean` | `false` | Treat value as numeric string |
-| `isAllowed` | `(values: ValueObject) => boolean` | - | Custom validation function |
-| `onValueChange` | `(values: ValueObject) => void` | - | Callback when value changes |
-| `type` | `"text" \| "tel"` | `"text"` | Input type |
-| `displayType` | `"input" \| "text"` | `"input"` | Render as input or text |
-| `customInput` | `React.ComponentType` | - | Custom input component |
-| `renderText` | `(value, props) => ReactNode` | - | Custom text renderer |
-| `name` | `string` | - | Field name (included in ValueObject) |
-| `getInputRef` | `(el: HTMLInputElement) => void` | - | Callback to get input element ref |
-
-### Thousand Spacing Options
-
-| Value | Description | Example |
-|-------|-------------|---------|
-| `"3"` | Groups of 3 (US/EU) | `1,234,567` |
-| `"2"` | Groups of 2 | `12,34,56,7` |
-| `"2s"` | Indian system (Lakhs/Crores) | `12,34,567` |
-| `"4"` | Groups of 4 | `123,4567` |
-
-## Utility Functions
+## Standalone Utilities
 
 ### formatCurrency
 
-Format a number/string without rendering a component:
-
-```tsx
+```ts
 import { formatCurrency } from "currency-fomatter";
 
-// Basic usage
+// Basic
 formatCurrency(1234567.89);
-// Output: "1,234,567.89"
+// → "1,234,567.89"
 
 // With options
 formatCurrency(1234567.89, {
@@ -198,197 +124,154 @@ formatCurrency(1234567.89, {
   fixedDecimalScale: true,
   thousandSeparator: ",",
 });
-// Output: "$1,234,567.89"
+// → "$1,234,567.89"
 
-// Indian format
-formatCurrency(1234567, {
-  prefix: "₹",
-  thousandSpacing: "2s",
-});
-// Output: "₹12,34,567"
+// Indian number system
+formatCurrency(1234567, { prefix: "₹", thousandSpacing: "2s" });
+// → "₹12,34,567"
 ```
 
 ### parseCurrency
 
-Parse a formatted currency string back to numeric values:
+Round-trip parsing — the inverse of `formatCurrency`:
 
-```tsx
+```ts
 import { parseCurrency } from "currency-fomatter";
 
-const result = parseCurrency("$1,234.56", {
-  prefix: "$",
-  thousandSeparator: ",",
-});
-// result = {
-//   value: "1234.56",
-//   floatValue: 1234.56,
-//   formattedValue: "$1,234.56"
-// }
+parseCurrency("$1,234.56", { prefix: "$", thousandSeparator: "," });
+// → { value: "1234.56", floatValue: 1234.56, formattedValue: "$1,234.56" }
 
 // Euro format
-const euroResult = parseCurrency("1.234,56€", {
+parseCurrency("1.234,56€", {
   suffix: "€",
   thousandSeparator: ".",
   decimalSeparator: ",",
 });
-// euroResult.floatValue = 1234.56
+// → { floatValue: 1234.56 }
 ```
 
-### formatCompact
+### formatCompact / parseCompact
 
-Format large numbers in compact notation (1K, 1M, 1B):
+Compact number notation (1K, 1M, 1B) with full round-trip support:
 
-```tsx
-import { formatCompact } from "currency-fomatter";
+```ts
+import { formatCompact, parseCompact } from "currency-fomatter";
 
-// Basic usage
-formatCompact(1234567);
-// Output: "1.23M"
+formatCompact(1234567);          // → "1.23M"
+formatCompact(2500000000);       // → "2.5B"
+formatCompact(1500000, { prefix: "$", decimalScale: 1 }); // → "$1.5M"
 
-formatCompact(2500000000);
-// Output: "2.5B"
-
-// With currency prefix
-formatCompact(1500000, { prefix: "$", decimalScale: 1 });
-// Output: "$1.5M"
-
-// Vietnamese format
+// Vietnamese
 formatCompact(1500000000, {
-  compactDisplay: {
-    thousand: " nghìn",
-    million: " triệu",
-    billion: " tỷ",
-  },
+  compactDisplay: { thousand: " nghìn", million: " triệu", billion: " tỷ" },
   suffix: " ₫",
 });
-// Output: "1.5 tỷ ₫"
+// → "1.5 tỷ ₫"
 
-// Parse compact format back to number
-import { parseCompact } from "currency-fomatter";
+// Parse back
+parseCompact("2.5M"); // → { value: "2500000", floatValue: 2500000 }
+```
 
-parseCompact("2.5M");
-// Output: { value: "2500000", floatValue: 2500000 }
+### getCurrencyConfig
+
+Auto-configure formatting from ISO 4217 currency codes:
+
+```ts
+import { getCurrencyConfig } from "currency-fomatter";
+
+getCurrencyConfig("USD");
+// → { prefix: "$", decimalScale: 2, fixedDecimalScale: true, thousandSeparator: ",", decimalSeparator: "." }
+
+getCurrencyConfig("JPY");
+// → { prefix: "¥", decimalScale: 0, ... }
+
+getCurrencyConfig("VND");
+// → { suffix: " ₫", decimalScale: 0, ... }
+
+// Use with component
+<CurrencyFormat value={1234.56} {...getCurrencyConfig("GBP")} />
+// → £1,234.56
 ```
 
 ## Locale Support
 
-### Dynamic Locale Detection (Recommended)
+### Auto-detect from browser
 
-Uses browser's `Intl.NumberFormat` to auto-detect format for ANY locale:
-
-```tsx
-import {
-  detectLocaleFormat,
-  createLocaleConfig,
-  getAutoLocaleConfig,
-  formatWithIntl,
-} from "currency-fomatter";
-
-// Auto-detect user's browser locale
-const autoConfig = getAutoLocaleConfig("USD");
-// Automatically detects separators, prefix/suffix based on user's browser
-
-// Detect format for any locale (no hardcoding!)
-const thaiFormat = detectLocaleFormat("th-TH", "THB");
-// { thousandSeparator: ",", decimalSeparator: ".", prefix: "฿", ... }
-
-const arabicFormat = detectLocaleFormat("ar-SA", "SAR");
-// Correctly detects Arabic number formatting
-
-// Create complete config dynamically
-const config = createLocaleConfig("es-MX", "MXN");
-// Full config with compactDisplay labels from Intl
-
-// Direct Intl formatting (most accurate)
-formatWithIntl(1234567.89, "de-DE", { style: "currency", currency: "EUR" });
-// Output: "1.234.567,89 €"
-```
-
-### Use with CurrencyFormat
-
-```tsx
-import { getFormatOptionsFromLocale, CurrencyFormat } from "currency-fomatter";
-
-// Works with ANY locale - dynamic detection fallback
-<CurrencyFormat
-  value={1234567}
-  {...getFormatOptionsFromLocale("th-TH", { currency: "THB" })}
-/>
-
-// Auto-detect from browser
+```ts
 import { getAutoLocaleConfig } from "currency-fomatter";
 
-const { prefix, suffix, thousandSeparator, decimalSeparator } = getAutoLocaleConfig("USD");
-<CurrencyFormat value={1234.56} prefix={prefix} suffix={suffix} ... />
+// Detects user's browser locale automatically
+const config = getAutoLocaleConfig("USD");
+<CurrencyFormat value={1234.56} {...config} />
 ```
 
-### Static Presets (Fallback)
+### Any locale via Intl.NumberFormat
 
-Pre-configured locales for common countries:
+```ts
+import { detectLocaleFormat, createLocaleConfig, formatWithIntl } from "currency-fomatter";
 
-```tsx
-import { localePresets, getLocaleConfig } from "currency-fomatter";
+// Thai
+detectLocaleFormat("th-TH", "THB");
+// → { thousandSeparator: ",", decimalSeparator: ".", prefix: "฿", ... }
 
-// Available presets: en-US, vi-VN, de-DE, ja-JP, en-IN, fr-FR, zh-CN, ko-KR, pt-BR, en-GB
+// Arabic
+detectLocaleFormat("ar-SA", "SAR");
 
-const vnConfig = getLocaleConfig("vi-VN");
-// Uses preset if available, falls back to dynamic detection
-
-<CurrencyFormat
-  value={1234567}
-  {...getFormatOptionsFromLocale("vi-VN")}
-/>
-// Output: 1.234.567 ₫
+// Direct Intl formatting
+formatWithIntl(1234567.89, "de-DE", { style: "currency", currency: "EUR" });
+// → "1.234.567,89 €"
 ```
 
-### Custom Locale Registry
+### Static presets
 
-Register your own locale configurations:
+Pre-configured: `en-US`, `vi-VN`, `de-DE`, `ja-JP`, `en-IN`, `fr-FR`, `zh-CN`, `ko-KR`, `pt-BR`, `en-GB`
 
-```tsx
-import { registerLocale, unregisterLocale, getLocaleConfig } from "currency-fomatter";
+```ts
+import { getLocaleConfig, getFormatOptionsFromLocale } from "currency-fomatter";
 
-// Register custom locale
-registerLocale("my-company", {
-  locale: "my-company",
+<CurrencyFormat value={1234567} {...getFormatOptionsFromLocale("vi-VN")} />
+// → 1.234.567 ₫
+```
+
+### Custom locale registry
+
+```ts
+import { registerLocale, unregisterLocale } from "currency-fomatter";
+
+registerLocale("bitcoin", {
+  locale: "bitcoin",
   prefix: "₿ ",
   thousandSeparator: " ",
-  decimalSeparator: ",",
+  decimalSeparator: ".",
   decimalScale: 8,
 });
 
-// Use it
-const config = getLocaleConfig("my-company");
+// Use it anywhere
+<CurrencyFormat value={0.00123456} {...getFormatOptionsFromLocale("bitcoin")} />
 
-// Unregister when done
-unregisterLocale("my-company");
+unregisterLocale("bitcoin");
 ```
 
-## useCurrencyFormat Hook
+## Hooks
 
-A React hook for easy currency state management:
+### useCurrencyInput (Headless)
+
+A truly headless hook that works with **any** `<input>` element. No dependency on `<CurrencyFormat />`.
 
 ```tsx
-import { useCurrencyFormat, CurrencyFormat } from "currency-fomatter";
+import { useCurrencyInput } from "currency-fomatter";
 
 function PriceInput() {
-  const {
-    value,           // number: 1234.56
-    formattedValue,  // string: "$1,234.56"
-    setValue,        // (num: number | string) => void
-    inputProps,      // Props to spread on CurrencyFormat
-    reset,           // Reset to initial value
-    clear,           // Clear value
-  } = useCurrencyFormat({
-    locale: "en-US",
+  const { value, formattedValue, getInputProps, setValue, reset, clear } = useCurrencyInput({
+    currency: "USD",         // Auto-configures prefix, decimals from ISO 4217
     initialValue: 1000,
+    onValueChange: (values) => console.log(values.floatValue),
   });
 
   return (
     <div>
-      <CurrencyFormat {...inputProps} />
-      <p>Raw value: {value}</p>
-      <p>Formatted: {formattedValue}</p>
+      <input {...getInputProps()} />
+      <p>Raw: {value} | Display: {formattedValue}</p>
       <button onClick={() => setValue(2000)}>Set $2000</button>
       <button onClick={reset}>Reset</button>
       <button onClick={clear}>Clear</button>
@@ -397,34 +280,196 @@ function PriceInput() {
 }
 ```
 
-### Hook with Custom Options
+Works with any UI library:
 
 ```tsx
-const { inputProps, formattedValue } = useCurrencyFormat({
-  locale: "vi-VN",
-  initialValue: 1000000,
-  decimalScale: 0,
-});
+// Material UI
+<TextField {...getInputProps()} label="Price" />
 
-// formattedValue = "1.000.000 ₫"
+// Chakra UI
+<Input {...getInputProps()} />
+
+// Ant Design
+<AntInput {...getInputProps()} />
 ```
 
-### Hook without Locale
+Options: `currency`, `locale`, `initialValue`, `onValueChange`, plus all `FormatCurrencyOptions` (prefix, suffix, decimalScale, etc.). Direct props override currency/locale defaults.
+
+### useCurrencyFormat
+
+Higher-level hook that returns props for the `<CurrencyFormat />` component:
 
 ```tsx
-const { inputProps, value } = useCurrencyFormat({
-  initialValue: 99.99,
-  prefix: "$",
-  decimalScale: 2,
-  fixedDecimalScale: true,
-});
+import { useCurrencyFormat, CurrencyFormat } from "currency-fomatter";
+
+function PriceInput() {
+  const { value, formattedValue, inputProps, reset, clear } = useCurrencyFormat({
+    locale: "en-US",
+    initialValue: 1000,
+  });
+
+  return (
+    <div>
+      <CurrencyFormat {...inputProps} />
+      <p>Raw: {value} | Display: {formattedValue}</p>
+    </div>
+  );
+}
 ```
 
-## Using with Form Libraries
+## PatternFormat
+
+A focused component for pattern-based formatting (phone, card, date). Cleaner API than using `CurrencyFormat` with `format` prop.
+
+```tsx
+import { PatternFormat } from "currency-fomatter";
+
+// Phone number
+<PatternFormat format="+1 (###) ###-####" mask="_" />
+
+// Credit card
+<PatternFormat format="#### #### #### ####" mask="_" />
+
+// Date with per-position masks
+<PatternFormat format="##/##/####" mask={["D","D","M","M","Y","Y","Y","Y"]} />
+
+// Show mask on empty
+<PatternFormat format="+1 (###) ###-####" mask="_" allowEmptyFormatting />
+// → +1 (___) ___-____
+```
+
+PatternFormat accepts: `format`, `mask`, `allowEmptyFormatting`, `value`, `defaultValue`, `onValueChange`, `displayType`, `customInput`, and all standard input props.
+
+## Component API
+
+### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `value` | `string \| number` | — | Controlled input value |
+| `defaultValue` | `string \| number` | — | Uncontrolled initial value |
+| `format` | `string \| Function` | — | Pattern (`"+1 (###) ###-####"`) or custom format function |
+| `decimalScale` | `number` | — | Max decimal places |
+| `decimalSeparator` | `string` | `"."` | Decimal separator |
+| `thousandSeparator` | `string \| boolean` | `","` | Thousand separator (`true` = `","`) |
+| `thousandSpacing` | `"2" \| "2s" \| "3" \| "4"` | `"3"` | Grouping pattern |
+| `thousandsGroupStyle` | `"thousand" \| "lakh" \| "wan" \| "none"` | — | Human-readable grouping alias |
+| `mask` | `string \| string[]` | `" "` | Mask for empty format positions |
+| `prefix` | `string` | `""` | Text before number (`"$"`) |
+| `suffix` | `string` | `""` | Text after number (`"%"`) |
+| `allowNegative` | `boolean` | `true` | Allow negative values |
+| `allowEmptyFormatting` | `boolean` | `false` | Show prefix/suffix when empty |
+| `allowedDecimalSeparators` | `string[]` | — | Extra keys treated as decimal separator |
+| `fixedDecimalScale` | `boolean` | `false` | Always show decimal places |
+| `isNumericString` | `boolean` | `false` | Treat value as numeric string |
+| `isAllowed` | `(values) => boolean` | — | Custom validation |
+| `onValueChange` | `(values, sourceInfo) => void` | — | Value change callback |
+| `inputMode` | `"numeric" \| "decimal" \| "text"` | auto | Mobile keyboard type (auto-detected) |
+| `displayType` | `"input" \| "text"` | `"input"` | Render mode |
+| `customInput` | `ComponentType` | — | Custom input component |
+| `renderText` | `(value, props) => ReactNode` | — | Custom text renderer |
+| `type` | `"text" \| "tel"` | `"text"` | Input type |
+| `name` | `string` | — | Field name |
+| `getInputRef` | `(el) => void` | — | Get input element ref |
+
+### thousandsGroupStyle
+
+Human-readable alias for `thousandSpacing`:
+
+| Style | Equivalent | Example |
+|-------|-----------|---------|
+| `"thousand"` | `"3"` | `1,234,567` |
+| `"lakh"` | `"2s"` | `12,34,567` |
+| `"wan"` | `"4"` | `123,4567` |
+| `"none"` | — | `1234567` |
+
+### allowedDecimalSeparators
+
+Accept multiple keys as decimal input (useful for European keyboards):
+
+```tsx
+<CurrencyFormat
+  decimalSeparator=","
+  allowedDecimalSeparators={[",", "."]}
+  // User can press either . or , to type a decimal
+/>
+```
+
+### ValueObject
+
+```ts
+interface ValueObject {
+  formattedValue: string;  // "$1,234.56"
+  value: string;           // "1234.56"
+  floatValue: number;      // 1234.56
+  name?: string;           // Field name if provided
+}
+```
+
+### onValueChange sourceInfo
+
+```ts
+onValueChange={(values, sourceInfo) => {
+  // sourceInfo.source: "event" (user typed) | "prop" (value prop changed)
+  // sourceInfo.event: the original DOM event (when source is "event")
+  if (sourceInfo?.source === "event") {
+    // Only react to user input, not programmatic changes
+  }
+}}
+```
+
+## Examples
+
+### Phone number
+
+```tsx
+<PatternFormat format="+1 (###) ###-####" mask="_" />
+// → +1 (555) 123-4567
+```
+
+### Credit card
+
+```tsx
+<PatternFormat format="#### #### #### ####" mask="_" />
+// → 4111 1111 1111 1111
+```
+
+### Percentage with max
+
+```tsx
+<CurrencyFormat
+  suffix="%"
+  decimalScale={2}
+  isAllowed={(values) => (values.floatValue ?? 0) <= 100}
+/>
+```
+
+### Display as text
+
+```tsx
+<CurrencyFormat
+  value={9999.99}
+  displayType="text"
+  thousandSeparator=","
+  prefix="$"
+/>
+// Renders: <span role="status" aria-live="polite">$9,999.99</span>
+```
+
+### Custom input (Material UI, etc.)
+
+```tsx
+<CurrencyFormat
+  value={1000}
+  customInput={TextField}
+  thousandSeparator=","
+  prefix="$"
+/>
+```
+
+## Form Library Integration
 
 ### react-hook-form
-
-The component supports `ref` forwarding for seamless integration:
 
 ```tsx
 import { useForm } from "react-hook-form";
@@ -437,11 +482,9 @@ function MyForm() {
     <form onSubmit={handleSubmit(onSubmit)}>
       <CurrencyFormat
         {...register("price")}
-        name="price"
         thousandSeparator=","
         prefix="$"
         onValueChange={(values, sourceInfo) => {
-          // Only update form when user interacts, not on prop changes
           if (sourceInfo?.source === "event") {
             setValue("price", values.floatValue);
           }
@@ -452,116 +495,42 @@ function MyForm() {
 }
 ```
 
-### Multiple Fields
+## Accessibility
 
-Use the `name` prop to identify fields in shared handlers:
-
-```tsx
-function PriceForm() {
-  const [prices, setPrices] = useState({ min: 0, max: 0 });
-
-  const handleValueChange = (values, sourceInfo) => {
-    if (values.name) {
-      setPrices(prev => ({
-        ...prev,
-        [values.name]: values.floatValue
-      }));
-    }
-  };
-
-  return (
-    <>
-      <CurrencyFormat
-        name="min"
-        value={prices.min}
-        onValueChange={handleValueChange}
-        prefix="$"
-      />
-      <CurrencyFormat
-        name="max"
-        value={prices.max}
-        onValueChange={handleValueChange}
-        prefix="$"
-      />
-    </>
-  );
-}
-```
+- `inputMode` auto-detected for mobile keyboards (numeric/decimal)
+- `displayType="text"` renders with `role="status"` and `aria-live="polite"`
+- All `aria-*` props passed through to the input element
+- IME composition support for CJK (Chinese, Japanese, Korean) input
+- Home/End keys respect prefix/suffix boundaries
+- Disabled/readOnly states properly handled
 
 ## TypeScript
 
-The package includes full TypeScript support with exported types:
+Full type exports available:
 
-```tsx
-import CurrencyFormat, {
-  // Component props
+```ts
+import type {
   CurrencyFormatProps,
+  PatternFormatProps,
+  ThousandsGroupStyle,
   ValueObject,
   ThousandSpacing,
-
-  // Utility function types
   FormatCurrencyOptions,
   ParseCurrencyOptions,
   CompactDisplayOptions,
   FormatCompactOptions,
-
-  // Hook types
   UseCurrencyFormatOptions,
   UseCurrencyFormatReturn,
-
-  // Locale types
+  UseCurrencyInputOptions,
+  UseCurrencyInputReturn,
   LocaleConfig,
-
-  // Callback types
+  CurrencyInfo,
   FormatFunction,
+  RemoveFormattingFunction,
   IsAllowedFunction,
   OnValueChangeFunction,
+  RenderTextFunction,
 } from "currency-fomatter";
-
-// ValueObject type
-interface ValueObject {
-  formattedValue: string;  // Formatted display value
-  value: string;           // Unformatted numeric string
-  floatValue: number;      // Parsed float value
-  name?: string;           // Field name (if provided)
-}
-
-// onValueChange callback signature
-type OnValueChangeFunction = (
-  values: ValueObject,
-  sourceInfo?: {
-    event?: ChangeEvent<HTMLInputElement>;
-    source: "event" | "prop";  // "event" = user input, "prop" = value prop changed
-  }
-) => void;
-
-// Locale config type
-interface LocaleConfig {
-  locale: string;
-  currency?: string;
-  currencySymbol?: string;
-  prefix?: string;
-  suffix?: string;
-  thousandSeparator?: string | boolean;
-  decimalSeparator?: string;
-  thousandSpacing?: ThousandSpacing;
-  decimalScale?: number;
-  compactDisplay?: CompactDisplayOptions;
-}
-```
-
-## Event Handlers
-
-All standard input event handlers are supported:
-
-```tsx
-<CurrencyFormat
-  onChange={(e) => console.log("onChange", e)}
-  onKeyDown={(e) => console.log("onKeyDown", e)}
-  onMouseUp={(e) => console.log("onMouseUp", e)}
-  onFocus={(e) => console.log("onFocus", e)}
-  onBlur={(e) => console.log("onBlur", e)}
-/>
 ```
 
 ## License
