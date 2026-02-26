@@ -1,8 +1,8 @@
-# kurrency-kit
+# currency-fomatter
 
 **The currency toolkit for React** — format, parse, and input currencies with zero config.
 
-Unlike other formatting libraries that only give you a component, `kurrency-kit` gives you **3 layers** you can use independently:
+Unlike other formatting libraries that only give you a component, `currency-fomatter` gives you **3 layers** you can use independently:
 
 | Layer | What | Use case |
 |-------|------|----------|
@@ -13,12 +13,12 @@ Unlike other formatting libraries that only give you a component, `kurrency-kit`
 **[Live Demo](https://dist-wine-psi.vercel.app)**
 
 ```bash
-npm install kurrency-kit
+npm install currency-fomatter
 ```
 
-## Why kurrency-kit?
+## Why currency-fomatter?
 
-| Feature | kurrency-kit | react-number-format | react-currency-input-field |
+| Feature | currency-fomatter | react-number-format | react-currency-input-field |
 |---------|:-:|:-:|:-:|
 | Standalone utils (no React) | **Yes** | No | No |
 | Format + Parse symmetry | **Yes** | No | No |
@@ -39,7 +39,7 @@ npm install kurrency-kit
 ### Just format a number (no React)
 
 ```ts
-import { formatCurrency, parseCurrency } from "kurrency-kit";
+import { formatCurrency, parseCurrency } from "currency-fomatter";
 
 formatCurrency(1234567.89, { prefix: "$", thousandSeparator: "," });
 // → "$1,234,567.89"
@@ -51,7 +51,7 @@ parseCurrency("$1,234,567.89", { prefix: "$", thousandSeparator: "," });
 ### Auto-config from currency code (ISO 4217)
 
 ```ts
-import { getCurrencyConfig, formatCurrency } from "kurrency-kit";
+import { getCurrencyConfig, formatCurrency } from "currency-fomatter";
 
 const usd = getCurrencyConfig("USD"); // { prefix: "$", decimalScale: 2, ... }
 const jpy = getCurrencyConfig("JPY"); // { prefix: "¥", decimalScale: 0, ... }
@@ -66,7 +66,7 @@ formatCurrency(1234567, getCurrencyConfig("EUR"));
 ### React component
 
 ```tsx
-import { CurrencyFormat } from "kurrency-kit";
+import { CurrencyFormat } from "currency-fomatter";
 
 <CurrencyFormat
   value={1234.56}
@@ -83,7 +83,7 @@ import { CurrencyFormat } from "kurrency-kit";
 ### React hook — headless, works with ANY input
 
 ```tsx
-import { useCurrencyInput } from "kurrency-kit";
+import { useCurrencyInput } from "currency-fomatter";
 
 function PriceInput() {
   const { value, formattedValue, getInputProps } = useCurrencyInput({
@@ -99,7 +99,7 @@ function PriceInput() {
 ### Pattern format (phone, card, date)
 
 ```tsx
-import { PatternFormat } from "kurrency-kit";
+import { PatternFormat } from "currency-fomatter";
 
 <PatternFormat format="+1 (###) ###-####" mask="_" />
 // → +1 (555) 123-4567
@@ -113,7 +113,7 @@ import { PatternFormat } from "kurrency-kit";
 ### formatCurrency
 
 ```ts
-import { formatCurrency } from "kurrency-kit";
+import { formatCurrency } from "currency-fomatter";
 
 // Basic
 formatCurrency(1234567.89);
@@ -138,7 +138,7 @@ formatCurrency(1234567, { prefix: "₹", thousandSpacing: "2s" });
 Round-trip parsing — the inverse of `formatCurrency`:
 
 ```ts
-import { parseCurrency } from "kurrency-kit";
+import { parseCurrency } from "currency-fomatter";
 
 parseCurrency("$1,234.56", { prefix: "$", thousandSeparator: "," });
 // → { value: "1234.56", floatValue: 1234.56, formattedValue: "$1,234.56" }
@@ -157,7 +157,7 @@ parseCurrency("1.234,56€", {
 Compact number notation (1K, 1M, 1B) with full round-trip support:
 
 ```ts
-import { formatCompact, parseCompact } from "kurrency-kit";
+import { formatCompact, parseCompact } from "currency-fomatter";
 
 formatCompact(1234567);          // → "1.23M"
 formatCompact(2500000000);       // → "2.5B"
@@ -179,7 +179,7 @@ parseCompact("2.5M"); // → { value: "2500000", floatValue: 2500000 }
 Auto-configure formatting from ISO 4217 currency codes:
 
 ```ts
-import { getCurrencyConfig } from "kurrency-kit";
+import { getCurrencyConfig } from "currency-fomatter";
 
 getCurrencyConfig("USD");
 // → { prefix: "$", decimalScale: 2, fixedDecimalScale: true, thousandSeparator: ",", decimalSeparator: "." }
@@ -200,7 +200,7 @@ getCurrencyConfig("VND");
 ### Auto-detect from browser
 
 ```ts
-import { getAutoLocaleConfig } from "kurrency-kit";
+import { getAutoLocaleConfig } from "currency-fomatter";
 
 // Detects user's browser locale automatically
 const config = getAutoLocaleConfig("USD");
@@ -210,7 +210,7 @@ const config = getAutoLocaleConfig("USD");
 ### Any locale via Intl.NumberFormat
 
 ```ts
-import { detectLocaleFormat, createLocaleConfig, formatWithIntl } from "kurrency-kit";
+import { detectLocaleFormat, createLocaleConfig, formatWithIntl } from "currency-fomatter";
 
 // Thai
 detectLocaleFormat("th-TH", "THB");
@@ -229,7 +229,7 @@ formatWithIntl(1234567.89, "de-DE", { style: "currency", currency: "EUR" });
 Pre-configured: `en-US`, `vi-VN`, `de-DE`, `ja-JP`, `en-IN`, `fr-FR`, `zh-CN`, `ko-KR`, `pt-BR`, `en-GB`
 
 ```ts
-import { getLocaleConfig, getFormatOptionsFromLocale } from "kurrency-kit";
+import { getLocaleConfig, getFormatOptionsFromLocale } from "currency-fomatter";
 
 <CurrencyFormat value={1234567} {...getFormatOptionsFromLocale("vi-VN")} />
 // → 1.234.567 ₫
@@ -238,7 +238,7 @@ import { getLocaleConfig, getFormatOptionsFromLocale } from "kurrency-kit";
 ### Custom locale registry
 
 ```ts
-import { registerLocale, unregisterLocale } from "kurrency-kit";
+import { registerLocale, unregisterLocale } from "currency-fomatter";
 
 registerLocale("bitcoin", {
   locale: "bitcoin",
@@ -261,7 +261,7 @@ unregisterLocale("bitcoin");
 A truly headless hook that works with **any** `<input>` element. No dependency on `<CurrencyFormat />`.
 
 ```tsx
-import { useCurrencyInput } from "kurrency-kit";
+import { useCurrencyInput } from "currency-fomatter";
 
 function PriceInput() {
   const { value, formattedValue, getInputProps, setValue, reset, clear } = useCurrencyInput({
@@ -302,7 +302,7 @@ Options: `currency`, `locale`, `initialValue`, `onValueChange`, plus all `Format
 Higher-level hook that returns props for the `<CurrencyFormat />` component:
 
 ```tsx
-import { useCurrencyFormat, CurrencyFormat } from "kurrency-kit";
+import { useCurrencyFormat, CurrencyFormat } from "currency-fomatter";
 
 function PriceInput() {
   const { value, formattedValue, inputProps, reset, clear } = useCurrencyFormat({
@@ -324,7 +324,7 @@ function PriceInput() {
 A focused component for pattern-based formatting (phone, card, date). Cleaner API than using `CurrencyFormat` with `format` prop.
 
 ```tsx
-import { PatternFormat } from "kurrency-kit";
+import { PatternFormat } from "currency-fomatter";
 
 // Phone number
 <PatternFormat format="+1 (###) ###-####" mask="_" />
@@ -475,7 +475,7 @@ onValueChange={(values, sourceInfo) => {
 
 ```tsx
 import { useForm } from "react-hook-form";
-import { CurrencyFormat } from "kurrency-kit";
+import { CurrencyFormat } from "currency-fomatter";
 
 function MyForm() {
   const { register, handleSubmit, setValue } = useForm();
@@ -532,7 +532,7 @@ import type {
   IsAllowedFunction,
   OnValueChangeFunction,
   RenderTextFunction,
-} from "kurrency-kit";
+} from "currency-fomatter";
 ```
 
 ## License

@@ -1,6 +1,6 @@
 {
-  "name": "kurrency-kit",
-  "version": "1.0.0",
+  "name": "currency-fomatter",
+  "version": "1.4.4",
   "description": "Currency toolkit for React — standalone format/parse utils, headless hook, and drop-in input component with ISO 4217 support, locale auto-detection, and compact notation",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
